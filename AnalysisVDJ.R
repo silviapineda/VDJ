@@ -59,7 +59,7 @@ reads_clones_annot_AR_clones<- reads_clones_annot_AR[which(reads_clones_annot_AR
 clinAR_clone <- clinAR[which(reads_clones_annot_AR$total_reads>=100)] #(Discard samples with less than 100 reads)
 
 
-boxplot(reads_clones_annot_AR_clones$clonality ~ clinAR_clone, ylab = "Clonality", 
+boxplot(reads_clones_annot_AR_clones$total_reads ~ clinAR_clone, ylab = "Clonality", 
         col = c("goldenrod","firebrick3"))
 fit = lm(reads_clones_annot_Long_clones$clonality ~ clinLong_clone)
 anova(fit)
