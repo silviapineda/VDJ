@@ -44,30 +44,38 @@ p.cDNA<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=cDNA_reads, grou
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   ggtitle("cDNA Reads")
 
+p.cDNA.M154<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=M154_reads, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 280000) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  ggtitle("cDNA M154 Reads")
+
+p.cDNA.M155<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=M155_reads, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 280000) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  ggtitle("cDNA M155 Reads")
+
+plots <- list() 
+plots[[1]] <- p.cDNA
+plots[[2]] <- p.cDNA.M154
+plots[[3]] <- p.cDNA.M155
+
+layout <- matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE)
+ggplot2.multiplot(plotlist = plots, layout = layout)
+
 ###gDNA
 reads_clones_annot_Long_gDNA <- reads_clones_annot_Long[which(reads_clones_annot_Long$gDNA_reads>=100),] ## 69 samples (Discard samples with less than 100 reads)
 clinLong_gDNA <- clinLong[which(reads_clones_annot_Long$gDNA_reads>=100)] #(Discard samples with less than 100 reads)
 p.gDNA<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=gDNA_reads, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
   geom_line() +
   geom_point() +
-  ylim(0, 280000) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("gDNA Reads")
-
-p2.gDNA<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=gDNA_reads, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
-  geom_line() +
-  geom_point() +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   ggtitle("gDNA Reads different scale")
 
-plots <- list() 
-plots[[1]] <- p.cDNA
-plots[[2]] <- p2.gDNA
-plots[[3]] <- p.gDNA
-
-layout <- matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE)
-ggplot2.multiplot(plotlist = plots, layout = layout)
-
+ggplot2.multiplot(p.gDNA,p.cDNA,p.cDNA.M154,p.cDNA.M155)
 
 ###cDNA
 ####Plot the AR data
@@ -80,29 +88,36 @@ p.cDNA<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=cDNA_reads, group=
   scale_colour_manual(values=c("goldenrod","firebrick3")) +
   ggtitle("cDNA Reads")
 
+p.cDNA.M154<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=M154_reads, group=subject_id, shape=clinAR_cDNA, color=clinAR_cDNA)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 280000) +
+  scale_colour_manual(values=c("goldenrod","firebrick3")) +
+  ggtitle("M154 Reads")
+
+p.cDNA.M155<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=M155_reads, group=subject_id, shape=clinAR_cDNA, color=clinAR_cDNA)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 280000) +
+  scale_colour_manual(values=c("goldenrod","firebrick3")) +
+  ggtitle("M155 Reads")
+
 ###gDNAa
 reads_clones_annot_AR_gDNA <- reads_clones_annot_AR[which(reads_clones_annot_AR$gDNA_reads>=100),] ## 10 samples (Discard samples with less than 100 reads)
 clinAR_gDNA <- clinAR[which(reads_clones_annot_AR$gDNA_reads>=100)] #(Discard samples with less than 100 reads)
 p.gDNA<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=gDNA_reads, group=subject_id, shape=clinAR_gDNA, color=clinAR_gDNA)) +
   geom_line() +
   geom_point() +
-  ylim(0, 280000) +
-  scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  ggtitle("gDNA Reads")
-
-p2.gDNA<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=gDNA_reads, group=subject_id, shape=clinAR_gDNA, color=clinAR_gDNA)) +
-  geom_line() +
-  geom_point() +
   scale_colour_manual(values=c("goldenrod","firebrick3")) +
   ggtitle("gDNA Reads different scale")
 
-plots <- list() 
-plots[[1]] <- p.cDNA
-plots[[2]] <- p2.gDNA
-plots[[3]] <- p.gDNA
-
-layout <- matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE)
-ggplot2.multiplot(plotlist = plots, layout = layout)
+# plots <- list() 
+# plots[[1]] <- p.cDNA
+# plots[[2]] <- p2.gDNA
+# plots[[3]] <- p.gDNA
+# 
+# layout <- matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE)
+ggplot2.multiplot(p.gDNA,p.cDNA,p.cDNA.M154,p.cDNA.M155)
 
 
 ####################
@@ -279,7 +294,21 @@ chisq.test(reads_clones_annot$recipient.Race[!duplicated(reads_clones_annot$Samp
 chisq.test(reads_clones_annot$recipient.Race[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR")][!duplicated(reads_clones_annot$Sample_id)], 
            reads_clones_annot$clin[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR")][!duplicated(reads_clones_annot$Sample_id)])
 
+##Relatedness
+table(reads_clones_annot$Donor.Source[!duplicated(reads_clones_annot$Sample_id)])
+#NP
+table(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin=="NP")][!duplicated(reads_clones_annot$Sample_id)[which(reads_clones_annot$clin=="NP")]])
+#PNR
+table(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin=="PNR")][!duplicated(reads_clones_annot$Sample_id)[which(reads_clones_annot$clin=="PNR")]])
+#PR
+table(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin=="PR")][!duplicated(reads_clones_annot$Sample_id)[which(reads_clones_annot$clin=="PR")]])
+#AR
+table(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin=="AR")])
 
+chisq.test(reads_clones_annot$Donor.Source[!duplicated(reads_clones_annot$Sample_id)], reads_clones_annot$clin[!duplicated(reads_clones_annot$Sample_id)])
+
+chisq.test(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR")][!duplicated(reads_clones_annot$Sample_id)], 
+           reads_clones_annot$clin[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR")][!duplicated(reads_clones_annot$Sample_id)])
 
 
 
