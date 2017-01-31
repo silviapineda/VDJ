@@ -70,11 +70,12 @@ data_qc$isotype <- substr(data_qc$isosubtype, 1, 4)
 read_count <- table(data_qc$specimen_label)
 read_count_amplification <- table(data_qc$specimen_label,data_qc$amplification_template)
 read_count_isotype <- table(data_qc$specimen_label, data_qc$isotype)
+read_count_run <- table(data_qc$specimen_label,data_qc$run_label)
 colnames(read_count_isotype)[1] = "UNMAPPED"
 colnames(read_count_isotype) <- paste(colnames(read_count_isotype), "isotypes", sep = "_")
 
-reads <- cbind(read_count,read_count_amplification,read_count_isotype)
-colnames(reads)[1:3] <- c("total_reads","cDNA_reads","gDNA_reads")
+reads <- cbind(read_count,read_count_amplification,read_count_run,read_count_isotype)
+colnames(reads)[1:6] <- c("total_reads","cDNA_reads","gDNA_reads","M154_reads","M155_reads","T7_reads")
   
 
 ###Identification of clones
@@ -112,7 +113,7 @@ clone_count <- read.csv("/Users/Pinedasans/Data/VDJ/clones_count_sample.csv")
 clone_count <- clone_count[,2:4]
 id.sample <- match(rownames(reads),clone_count$specimen_label)
 reads_clones <- cbind(reads,clones_igh[,1],clone_count[id.sample,1:2])
-colnames(reads_clones)[10:11]<-c("clones_igh","total_clones")
+colnames(reads_clones)[13:14]<-c("clones_igh","total_clones")
 
 ###To obtaion the overlapping samples between clinical annotation and data
 id.sample <- match(rownames(reads_clones),clin_annot$specimen_id)
@@ -121,24 +122,24 @@ reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones)
 write.csv(reads_clones_annot, "total_reads_clones_new.csv", row.names = F)
 
 #####Only using cDNA reads
-clone_count <- read.csv("/Users/Pinedasans/Data/VDJ/clones_count_sample_cDNA.csv")
-clone_count <- clone_count[,2:4]
-id.sample <- match(rownames(reads),clone_count$specimen_label)
-reads_clones <- cbind(reads,clones_igh[,1],clone_count[id.sample,1:2])
-colnames(reads_clones)[10:11]<-c("clones_igh","total_clones")
-id.sample <- match(rownames(reads_clones),clin_annot$specimen_id)
-reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones)
-write.csv(reads_clones_annot, "total_reads_clones_new_cDNA.csv", row.names = F)
+clone_count_cDNA <- read.csv("/Users/Pinedasans/Data/VDJ/clones_count_sample_cDNA.csv")
+clone_count_cDNA <- clone_count_cDNA[,2:4]
+id.sample <- match(rownames(reads),clone_count_cDNA$specimen_label)
+reads_clones_cDNA <- cbind(reads,clones_igh[,1],clone_count_cDNA[id.sample,1:2])
+colnames(reads_clones_cDNA)[13:14]<-c("clones_igh","total_clones")
+id.sample <- match(rownames(reads_clones_cDNA),clin_annot$specimen_id)
+reads_clones_annot_cDNA <- cbind(clin_annot[id.sample,], reads_clones_cDNA)
+write.csv(reads_clones_annot_cDNA, "total_reads_clones_new_cDNA.csv", row.names = F)
 
 #####Only using gDNA reads
-clone_count <- read.csv("/Users/Pinedasans/Data/VDJ/clones_count_sample_gDNA.csv")
-clone_count <- clone_count[,2:4]
-id.sample <- match(rownames(reads),clone_count$specimen_label)
-reads_clones <- cbind(reads,clones_igh[,1],clone_count[id.sample,1:2])
-colnames(reads_clones)[10:11]<-c("clones_igh","total_clones")
-id.sample <- match(rownames(reads_clones),clin_annot$specimen_id)
-reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones)
-write.csv(reads_clones_annot, "total_reads_clones_new_gDNA.csv", row.names = F)
+clone_count_gDNA <- read.csv("/Users/Pinedasans/Data/VDJ/clones_count_sample_gDNA.csv")
+clone_count_gDNA <- clone_count_gDNA[,2:4]
+id.sample <- match(rownames(reads),clone_count_gDNA$specimen_label)
+reads_clones_gDNA <- cbind(reads,clones_igh[,1],clone_count_gDNA[id.sample,1:2])
+colnames(reads_clones_gDNA)[13:14]<-c("clones_igh","total_clones")
+id.sample <- match(rownames(reads_clones_gDNA),clin_annot$specimen_id)
+reads_clones_annot_gDNA <- cbind(clin_annot[id.sample,], reads_clones_gDNA)
+write.csv(reads_clones_annot_gDNA, "total_reads_clones_new_gDNA.csv", row.names = F)
 
 
-save(data_qc,reads_clones_annot,file="/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
+save(data_qc,reads_clones_annot,reads_clones_annot_cDNA,reads_clones_annot_gDNA,file="/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
