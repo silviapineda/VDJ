@@ -50,7 +50,7 @@ clinAR_gDNA <- clinAR[which(reads_clones_annot_AR$gDNA_reads>=100)] #(Discard sa
 
 ###cDNA
 ####Plot the longitudinal data
-p.cDNA.long<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=cDNA_reads, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
+p.cDNA.long<-ggplot(data=reads_clones_annot_Long, aes(x=time, y=cDNA_reads, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
   geom_line() +
   geom_point() +
   ylim(0, 280000) +
@@ -128,32 +128,33 @@ p.gDNA.AR<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=gDNA_reads, gro
 ggplot2.multiplot(p.gDNA.long,p.cDNA.long,p.gDNA.AR,p.cDNA.AR)
 
 
-####################
-####Plot Clones####
+##########################################
+#### Plot Clones using downsamploing ####
+#########################################
 
 ###Clones by individuals using gDNA
-p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clones_igh_gDNA, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
+p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clones_igh_gDNA_downsample, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
   geom_line() +
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("ClonesLong (per individual) gDNA")
+  ggtitle("ClonesLong gDNA downsampling (1062 reads)")
 
 ###Clones by individuals using cDNA
-p2<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=clones_igh_cDNA, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
+p2<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=clones_igh_cDNA_downsample, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
   geom_line() +
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("ClonesLong (per Individual cDNA")
+  ggtitle("ClonesLong cDNA downsampling (62173 reads) ")
 
 ##Clones by individuals AR using cDNA
-p3<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=clones_igh_gDNA, group=subject_id, shape=clinAR_gDNA, color=clinAR_gDNA)) +
+p3<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=clones_igh_gDNA_downsample_AR, group=subject_id, shape=clinAR_gDNA, color=clinAR_gDNA)) +
   geom_line() +
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  ggtitle("ClonesAR (per Individual) gDNA")
+  ggtitle("ClonesAR gDNA downsampling (5124 reads)")
 
 ##Clones by individuals AR using cDNA
 p4<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=clones_igh_cDNA, group=subject_id, shape=clinAR_cDNA, color=clinAR_cDNA)) +
@@ -161,20 +162,9 @@ p4<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=clones_igh_cDNA, group
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  ggtitle("ClonesAR (per Individual) cDNA")
+  ggtitle("ClonesAR cDNA downsampling (62173 reads)")
 
 ggplot2.multiplot(p1,p2,p3,p4)
-
-
-##Clones by samples using gDNA
-p1.sample<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=total_clones_gDNA, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
-  geom_line() +
-  geom_point() +
-  #ylim(0,120000) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("ClonesLong (per sample) gDNA")
-
-
 
 
 ################################
@@ -302,30 +292,30 @@ chisq.test(reads_clones_annot$Donor.Source[which(reads_clones_annot$clin!="AR" &
 
 ###Considering the number of clones gDNA
 par(mfrow = c(2, 2))  
-boxplot(reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)], 
+boxplot(reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)], 
         main="Time 0", ylab = "Number of clones", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==0)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)])
+fit = lm((reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==0)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)])
 anova(fit)
 
-boxplot((reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)], 
+boxplot((reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)], 
             main="Time 6",ylab = "Number of clones", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)])
+fit = lm((reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)])
 anova(fit)
 
-boxplot((reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)], ylab = "Number of clones", 
+boxplot((reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)], ylab = "Number of clones", 
             main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clones_igh[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)])
+fit = lm((reads_clones_annot_Long_gDNA$clones_igh_gDNA_downsample[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)])
 anova(fit)
 
-boxplot(reads_clones_annot_AR_gDNA$clones_igh ~ clinAR_gDNA, main = "AR" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
-fit = lm((reads_clones_annot_AR_gDNA$clones_igh~ clinAR_gDNA))
+boxplot(reads_clones_annot_AR_gDNA$clones_igh_gDNA_downsample ~ clinAR_gDNA, main = "AR" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
+fit = lm((reads_clones_annot_AR_gDNA$clones_igh_gDNA_downsample~ clinAR_gDNA))
 anova(fit)
 
 ###Considering the number of clones cDNA
 par(mfrow = c(1, 2))  
-boxplot(reads_clones_annot_AR_gDNA$clones_igh ~ clinAR_gDNA, main = "AR gDNA" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
-boxplot(reads_clones_annot_AR_cDNA$clones_igh ~ clinAR_cDNA, main = "AR cDNA" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
-fit = lm((reads_clones_annot_AR_cDNA$clones_igh~ clinAR_cDNA))
+boxplot(reads_clones_annot_AR_gDNA$clones_igh_gDNA_downsample ~ clinAR_gDNA, main = "AR gDNA" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
+boxplot(reads_clones_annot_AR_cDNA$clones_igh_cDNA_downsample ~ clinAR_cDNA, main = "AR cDNA" , ylab = "Number of clones",col = c("goldenrod","firebrick3"))
+fit = lm((reads_clones_annot_AR_cDNA$clones_igh_cDNA_downsample~ clinAR_cDNA))
 anova(fit)
 
 

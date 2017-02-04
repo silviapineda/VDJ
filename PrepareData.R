@@ -126,4 +126,70 @@ id.sample <- match(rownames(reads_clones),clin_annot$specimen_id)
 reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones)
 write.csv(reads_clones_annot, "total_reads_clones_new.csv", row.names = F)
 
+######################################
+######## Downsampling the data  ######
+######################################
+#Downsampling  
+
+##gDNA 1062 reads is the minimum (after QC) for LongData
+data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
+specimen_unique<-unique(data_qc_gDNA$specimen_label)
+
+clones_igh_gDNA<-matrix(NA,length(specimen_unique),100)
+for (j in 1:100){
+  for (i in 1:length(specimen_unique)){
+    data_specimen_unique<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(nrow(data_specimen_unique)>=1062){
+      data_specimen_unique.down<-data_specimen_unique[sample(nrow(data_specimen_unique),1062),]
+      clones_igh_gDNA[i,j]<- length(unique(data_specimen_unique.down[,"V_J_lenghCDR3_Clone"]))
+    }
+  }
+}
+
+clones_igh_gDNA_mean<-as.integer(apply(clones_igh_gDNA,1,mean))
+names(clones_igh_gDNA_mean)<-specimen_unique
+id.specimen<-match(reads_clones_annot$specimen_id,names(clones_igh_gDNA_mean))
+reads_clones_annot$clones_igh_gDNA_downsample_Long<-clones_igh_gDNA_mean[id.specimen]
+
+##gDNA 5124 reads is the minimum (after QC) for ARdata
+data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
+specimen_unique<-unique(data_qc_gDNA$specimen_label)
+
+clones_igh_gDNA<-matrix(NA,length(specimen_unique),100)
+for (j in 1:100){
+  for (i in 1:length(specimen_unique)){
+    data_specimen_unique<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(nrow(data_specimen_unique)>=5124){
+      data_specimen_unique.down<-data_specimen_unique[sample(nrow(data_specimen_unique),5124),]
+      clones_igh_gDNA[i,j]<- length(unique(data_specimen_unique.down[,"V_J_lenghCDR3_Clone"]))
+    }
+  }
+}
+
+clones_igh_gDNA_mean<-as.integer(apply(clones_igh_gDNA,1,mean))
+names(clones_igh_gDNA_mean)<-specimen_unique
+id.specimen<-match(reads_clones_annot$specimen_id,names(clones_igh_gDNA_mean))
+reads_clones_annot$clones_igh_gDNA_downsample_AR<-clones_igh_gDNA_mean[id.specimen]
+
+##cDNA 62173 read is the minimum (after QC)
+data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+specimen_unique<-unique(data_qc_cDNA$specimen_label)
+
+clones_igh_cDNA<-matrix(NA,length(specimen_unique),100)
+for (j in 1:100){
+  for (i in 1:length(specimen_unique)){
+    data_specimen_unique<-data_qc_cDNA[which(data_qc_cDNA$specimen_label==specimen_unique[i]),]
+    if(nrow(data_specimen_unique)>=62173){
+      data_specimen_unique.down<-data_specimen_unique[sample(nrow(data_specimen_unique),62173),]
+      clones_igh_cDNA[i,j]<- length(unique(data_specimen_unique.down[,"V_J_lenghCDR3_Clone"]))
+    }
+  }
+}
+
+clones_igh_cDNA_mean<-as.integer(apply(clones_igh_cDNA,1,mean))
+names(clones_igh_cDNA_mean)<-specimen_unique
+id.specimen<-match(reads_clones_annot$specimen_id,names(clones_igh_cDNA_mean))
+reads_clones_annot$clones_igh_cDNA_downsample<-clones_igh_cDNA_mean[id.specimen]
+
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
+
