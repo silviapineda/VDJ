@@ -149,7 +149,7 @@ for (j in 1:100){
 clones_igh_gDNA_mean<-as.integer(apply(clones_igh_gDNA,1,mean))
 names(clones_igh_gDNA_mean)<-specimen_unique
 id.specimen<-match(reads_clones_annot$specimen_id,names(clones_igh_gDNA_mean))
-reads_clones_annot$clones_igh_gDNA_downsample_Long<-clones_igh_gDNA_mean[id.specimen]
+reads_clones_annot$clones_igh_gDNA_downsample<-clones_igh_gDNA_mean[id.specimen]
 
 ##gDNA 5124 reads is the minimum (after QC) for ARdata
 data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
