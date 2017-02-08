@@ -8,6 +8,9 @@
 ### Author: Silvia Pineda
 ### Date: January, 2017
 ############################################################################################
+###import pandas library to work with data frames
+import pandas as pd
+import numpy as np
 
 ################################
 ######### Functions ############
@@ -23,15 +26,12 @@ def MatchNucleotides( a,b ):
                 return False
     return True 
 
-
 def NucleotideBelongsClone(nucleotide,clone):
     for i in range(0,len(clone)):
         matches=MatchNucleotides(nucleotide,clone[i])
         if(matches): 
             return True
     return False      
-
-
 
 def AddNucleotide(nucleotide,clones):
     clones_new=[]
@@ -44,52 +44,61 @@ def AddNucleotide(nucleotide,clones):
     clones_new.append(nucleotide_clone)
     return clones_new
 
-
-
-
 def ProcessNucleotides(nucleotides):
-    clones=[]
+    Listclones=[]
     for i in range(0,len(nucleotides)):
-        clones = AddNucleotide(nucleotides[i], clones)
-    return clones
+        Listclones = AddNucleotide(nucleotides[i], Listclones)
+    return Listclones
 
-
-
+def ObtainNumberClones(ListClones):
+    count = 1
+    df_clones = pd.DataFrame([])
+    for i in range(0,len(ListClones)):
+        for j in range(0,len(ListClones[i])):
+            df_clones = df_clones.append({'clone':ListClones[i][j],
+                                    'number':count},ignore_index=True)
+        count=count+1
+    return df_clones
+    
 ########################
 ###### Main program ####
 ########################
 
-###import pandas library to work with data frames
-import pandas
 data_clonesInference = pandas.read_csv("/Users/Pinedasans/Data/VDJ/data_clonesInference.txt",sep="\t")
 
-###Obtain the unique samples
-sample_unique = data_clonesInference['specimen_label'].unique()
+###Obtain the unique subjects
+sample_unique = data_clonesInference['sample_id'].unique()
 
-##Declare result: total number of clones infered per sample
-ClonesInfered_sample = []
-ReadsPerClone = []
+##Declare result: total number of clones infered per subject
+result_ClonesInfered = pd.DataFrame([])
 
-###Loop for each sample
+###Loop for each subject
 for i in range(0,len(sample_unique)):
     print (i)
-    data_clonesInference_sample_unique = data_clonesInference[data_clonesInference['specimen_label'] == sample_unique[i]]
-    V_J_CDR3_unique = data_clonesInference_sample_unique['V_J_lenghCDR3'].unique()
+    data_clonesInference_sample_unique = data_clonesInference[data_clonesInference['sample_id'] == sample_unique[i]]
+    ##To calculate the minimum read depth per individual to calculate the clones
+    min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
+    data_clonesInference_sample_unique_down = data_clonesInference_sample_unique.sample(min_read_depth) 
+    V_J_CDR3_unique = data_clonesInference_sample_unique_down['V_J_lenghCDR3'].unique()
     ClonesInfered = 0
-    
+       
     ##Loop for each V_J_CDR3 unique 
+    result = data_clonesInference_sample_unique_down
     for j in range(0,len(V_J_CDR3_unique)):
-        data_clonesInference_V_J_CDR3_unique = data_clonesInference_sample_unique[data_clonesInference_sample_unique['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
+        #print (j)
+        data_clonesInference_V_J_CDR3_unique = data_clonesInference_sample_unique_down[data_clonesInference_sample_unique_down['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
         nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
         ##Obtain the number of clones infered per sample
-        ClonesInfered = ClonesInfered + len(ProcessNucleotides(nucleotides))
-    ClonesInfered_sample.append(ClonesInfered)  
-    ReadsPerClone.append(len(data_clonesInference_sample_unique)/ClonesInfered_sample[0])
+        ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
+        result.loc[data_clonesInference_V_J_CDR3_unique.index,'numberClone'] = pd.Series(ClonesInfered['number']).values
+        
+    result_ClonesInfered = result_ClonesInfered.append(result)  
 
 ###Result    
-clones_count_sample = pandas.DataFrame(
-{'specimen_label':sample_unique,
-'num_clones':ClonesInfered_sample,
-'reads_per_clone':ReadsPerClone
-}) 
-clones_count_sample.to_csv('/Users/Pinedasans/Data/VDJ/clones_count_sample.csv')
+result_ClonesInfered.to_csv('/Users/Pinedasans/Data/VDJ/ClonesInfered_downsampled.csv')
+
+
+
+
+
+
