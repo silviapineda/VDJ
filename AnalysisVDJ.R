@@ -22,6 +22,73 @@ library(lme4)
 setwd("/Users/Pinedasans/Documents/VDJ/")
 
 load("/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
+load("/Users/Pinedasans/Data/VDJ/VDJ_downSampled.Rdata")
+
+############################################
+####Calculate entropy with downsampling####
+###########################################
+
+###Clonotype for gDNA
+data_clonesInference_gDNA<-data_clonesInference[which(data_clonesInference$amplification_template=="gDNA"),]
+specimen_unique<-unique(data_clonesInference$specimen_label)
+
+data_clone_specimen<-NULL
+clone_entropy<-matrix(NA,length(specimen_unique),5)
+simpson<-matrix(NA,length(specimen_unique),5)
+for(j in 1:5){
+  print(j)
+  data_clone_dataset<-data_clonesInference_gDNA[which(data_clonesInference_gDNA$dataset==paste("ClonesInfered_downsampled_",j,".csv",sep="")),]
+  for (i in 1:length(specimen_unique)){
+    print(i)
+    data_specimen_unique<-data_clone_dataset[which(data_clone_dataset$specimen_label==specimen_unique[i]),]
+    clone_entropy[i,j]<-entropy(as.numeric(data_specimen_unique[,"numberClone"]))
+    simpson[i,j]<-simpson(table(as.numeric(data_specimen_unique[,"numberClone"])))
+  }
+}
+
+clone_entropy_mean<-apply(clone_entropy,1,function(x) mean(x,na.rm=T))
+clone_entropy_norm<-clone_entropy_mean/max(clone_entropy_mean,na.rm = T)
+clonality<-(1-clone_entropy_norm)
+names(clonality)<-specimen_unique
+
+id.sample<-match(names(clonality),reads_clones_down_annot$specimen_id)
+reads_clones_down_annot[id.sample,"clonality_gDNA"]<-clonality
+
+###Clones longitudional
+reads_clones_annot_down_Long<-reads_clones_down_annot[which(reads_clones_down_annot$clin!="AR" & reads_clones_down_annot$clin!="pre-AR"),]
+clinLong<-factor(reads_clones_annot_down_Long$clin, levels=c("NP", "PNR", "PR"))
+
+##gDNA
+reads_clones_annot_Long_gDNA <- reads_clones_annot_down_Long[which(reads_clones_annot_down_Long$read_count_gDNA>=100),] ## 67 samples (Discard samples with less than 100 reads)
+clinLong_gDNA <- clinLong[which(reads_clones_annot_down_Long$read_count_gDNA>=100)] #(Discard samples with less than 100 reads)
+
+p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clonality_gDNA, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
+  geom_line() +
+  geom_point() +
+  #ylim(0,120000) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  ggtitle("Clonality gDNA")
+
+par(mfrow = c(2, 2))  
+boxplot(reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)], 
+        main="Time 0", ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
+fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)])
+anova(fit)
+
+boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)], 
+        main="Time 6",ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
+fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)])
+anova(fit)
+
+boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)], ylab = "Clonality", 
+        main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
+fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)])
+anova(fit)
+
+boxplot(reads_clones_annot_AR_gDNA$clonality_gDNA ~ clinAR_gDNA, main = "AR" , ylab = "Number of clones",col = c("goldenrod","firebrick3"),ylim=c(0,0.5))
+fit = lm((reads_clones_annot_AR_gDNA$clonality_gDNA~ clinAR_gDNA))
+anova(fit)
+
 
 
 ############################################
