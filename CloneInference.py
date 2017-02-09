@@ -61,10 +61,52 @@ def ObtainNumberClones(ListClones):
     return df_clones
 
 
+    
+    
+    
+def MinReadDepth(data_clonesInference,amplification,min_to_down,sample_to_down):
+    if (amplification is not None):
+        data_clonesInference_amp = data_clonesInference[data_clonesInference['amplification_template'] == amplification]
+        reads = pd.Series(data_clonesInference_amp[sample_to_down]).value_counts()
+    else:
+        reads = pd.Series(data_clonesInference[sample_to_down]).value_counts()
+    
+    min_read_depth = min(reads[reads>min_to_down])
+    return min_read_depth
+
+def DownSampling(data,min_read_depth):
+    data_sample_down = data.sample(min_read_depth) 
+    return data_sample_down
+
+    
+def DataToDownSampled(data_clonesInference,sample_by):
+    data_clonesInference_amp = data_clonesInference[data_clonesInference['amplification_template'] == amplification]
+    reads = pd.Series(data_clonesInference_amp[sample_to_down]).value_counts()
+        return data_clonesInference[data_clonesInference['amplification_template'] == amplification]
+    else:
+        return data_clonesInference
+
+        
+        
+     
+####To obtain the clones by downsampling by individuals
+
+min_read_depth = MinReadDepth(data_clonesInference,None,100,'sample_id')
+data_clones_to_downSampled = DataToDownSampled(data_clonesInference,None)
+
+min_read_depth = MinReadDepth(data_clonesInference,"cDNA",100,'specimen_label')
+data_clones_to_downSampled_cDNA = DataToDownSampled(data_clonesInference,"cDNA")
+
+min_read_depth = MinReadDepth(data_clonesInference,"gDNA",1000,'specimen_label')
+data_clones_to_downSampled_gDNA = DataToDownSampled(data_clonesInference,"gDNA")
+
+data_clonesInference_sample_unique = data_clones_to_downSampled[data_clones_to_downSampled['sample_id'] == sample_unique[i]]
+data_clonesInference_sample_unique_down = DownSampling(data_clonesInference_sample_unique,min_read_depth)
+    
+        
 def ProcessSample(data_clonesInference_sample_unique):
-    min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
-    ##To calculate the minimum read depth per individual to calculate the clones
-    data_clonesInference_sample_unique_down = data_clonesInference_sample_unique.sample(min_read_depth) 
+     ##To calculate the minimum read depth per individual to calculate the clones
+   
     V_J_CDR3_unique = data_clonesInference_sample_unique_down['V_J_lenghCDR3'].unique()
     ClonesInfered = 0
        
@@ -72,12 +114,13 @@ def ProcessSample(data_clonesInference_sample_unique):
     result = data_clonesInference_sample_unique_down
     for j in range(0,len(V_J_CDR3_unique)):
         #print (j)
-        data_clonesInference_V_J_CDR3_unique = data_clonesInference_sample_unique_down[data_clonesInference_sample_unique_down['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
         nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
         ##Obtain the number of clones infered per sample
         ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
         result.loc[data_clonesInference_V_J_CDR3_unique.index,'numberClone'] = pd.Series(ClonesInfered['number']).values
     return result
+  
+
     
 ########################
 ###### Main program ####
@@ -90,16 +133,15 @@ sample_unique = data_clonesInference['sample_id'].unique()
 
 ##Declare result: total number of clones infered per subject
 result_ClonesInfered = pd.DataFrame([])
-
-###Loop for each subject
-rangeSamples = range(0,len(sample_unique))
+  
 ###Loop for each subject
 for i in range(0,len(sample_unique)):
     print (i)
-    data_clonesInference_sample_unique = data_clonesInference[data_clonesInference['sample_id'] == sample_unique[i]]
+    data_clonesInference_sample_unique = data_clones_to_downSampled[data_clones_to_downSampled['sample_id'] == sample_unique[i]]
+    data_clonesInference_sample_unique_down = DownSampling(data_clonesInference_sample_unique,min_read_depth)
     final_result = ProcessSample(data_clonesInference_sample_unique)
-      
     result_ClonesInfered = result_ClonesInfered.append(final_result)  
 
 ###Result    
 result_ClonesInfered.to_csv('/Users/Pinedasans/Data/VDJ/ClonesInfered_downsampled.csv')
+
