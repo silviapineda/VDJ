@@ -62,7 +62,8 @@ def ObtainNumberClones(ListClones):
 
 
 def ProcessSample(data_clonesInference_sample_unique):
-    min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
+    #min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
+    min_read_depth = 124940
     ##To calculate the minimum read depth per individual to calculate the clones
     data_clonesInference_sample_unique_down = data_clonesInference_sample_unique.sample(min_read_depth) 
     V_J_CDR3_unique = data_clonesInference_sample_unique_down['V_J_lenghCDR3'].unique()
@@ -91,8 +92,6 @@ sample_unique = data_clonesInference['sample_id'].unique()
 ##Declare result: total number of clones infered per subject
 result_ClonesInfered = pd.DataFrame([])
 
-###Loop for each subject
-rangeSamples = range(0,len(sample_unique))
 ###Loop for each subject
 for i in range(0,len(sample_unique)):
     print (i)
