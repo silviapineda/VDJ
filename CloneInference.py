@@ -65,19 +65,21 @@ def ProcessSample(data_clonesInference_sample_unique):
     #min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
     min_read_depth = 124940
     ##To calculate the minimum read depth per individual to calculate the clones
-    data_clonesInference_sample_unique_down = data_clonesInference_sample_unique.sample(min_read_depth) 
-    V_J_CDR3_unique = data_clonesInference_sample_unique_down['V_J_lenghCDR3'].unique()
-    ClonesInfered = 0
+    if(len(data_clonesInference_sample_unique)>=min_read_depth):
+        data_clonesInference_sample_unique_down = data_clonesInference_sample_unique.sample(min_read_depth)
+        
+        V_J_CDR3_unique = data_clonesInference_sample_unique_down['V_J_lenghCDR3'].unique()
+        ClonesInfered = 0
        
-    ##Loop for each V_J_CDR3 unique 
-    result = data_clonesInference_sample_unique_down
-    for j in range(0,len(V_J_CDR3_unique)):
-        #print (j)
-        data_clonesInference_V_J_CDR3_unique = data_clonesInference_sample_unique_down[data_clonesInference_sample_unique_down['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
-        nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
-        ##Obtain the number of clones infered per sample
-        ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
-        result.loc[data_clonesInference_V_J_CDR3_unique.index,'numberClone'] = pd.Series(ClonesInfered['number']).values
+        ##Loop for each V_J_CDR3 unique 
+        result = data_clonesInference_sample_unique_down
+        for j in range(0,len(V_J_CDR3_unique)):
+            print (j)
+            data_clonesInference_V_J_CDR3_unique = data_clonesInference_sample_unique_down[data_clonesInference_sample_unique_down['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
+            nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
+            ##Obtain the number of clones infered per sample
+            ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
+            result.loc[data_clonesInference_V_J_CDR3_unique.index,'numberClone'] = pd.Series(ClonesInfered['number']).values
     return result
     
 ########################
