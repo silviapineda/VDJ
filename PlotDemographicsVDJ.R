@@ -24,7 +24,24 @@ library(easyGgplot2)
 
 setwd("/Users/Pinedasans/Documents/VDJ/")
 load("/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
-load("/Users/Pinedasans/Data/VDJ/VDJ_downSampled.Rdata")
+#load("/Users/Pinedasans/Data/VDJ/VDJ_downSampled.Rdata")
+
+
+####Plot reads by gDNA 
+counts<-table(data_qc$specimen_label,data_qc$amplification_template)
+counts_cDNA <- counts[which(counts[,1]!=0),1]
+cols = c("firebrick3","chartreuse4","dodgerblue3","darkorange2","goldenrod")[reads_clones_annot$clin[which(reads_clones_annot$cDNA_reads!=0)]]
+barplot(counts_cDNA,col=cols,main="Number of Reads cDNA",xlab = "Samples", ylab = "Reads",las=2)
+legend(0, 250000, legend=levels(reads_clones_annot$clin[which(reads_clones_annot$gDNA_reads!=0)]),
+       col=c("firebrick3","chartreuse4","dodgerblue3","darkorange2","goldenrod"),pch=15, cex=0.8)
+
+####Plot reads by cDNA 
+counts_gDNA <- reads_clones_annot$gDNA_reads[which(reads_clones_annot$gDNA_reads!=0)]
+cols = c("firebrick3","chartreuse4","dodgerblue3","darkorange2","goldenrod")[reads_clones_annot$clin[which(reads_clones_annot$gDNA_reads!=0)]]
+barplot(counts_gDNA,col=cols,main="Number of Reads gDNA",xlab = "Samples", ylab = "Reads",las=2)
+legend(0, 20000, legend=levels(reads_clones_annot$clin[which(reads_clones_annot$gDNA_reads!=0)]),
+       col=c("firebrick3","chartreuse4","dodgerblue3","darkorange2","goldenrod"),pch=15, cex=0.8)
+
 
 ###Plot reads by individual total samples
 par(mfrow = c(2,1))
