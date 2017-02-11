@@ -62,6 +62,7 @@ def ObtainNumberClones(ListClones):
 
 
 def ProcessSample(data_clonesInference_sample_unique):
+    result = pd.DataFrame([])
     #min_read_depth = min(pd.Series(data_clonesInference['sample_id']).value_counts())
     min_read_depth = 124940
     ##To calculate the minimum read depth per individual to calculate the clones
