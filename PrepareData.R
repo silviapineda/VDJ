@@ -111,6 +111,7 @@ data_clonesInference<-data_qc[,c("specimen_label","sample_id","amplification_tem
 data_clonesInference<-data_clonesInference[which(nchar(data_qc$cdr3_seq)!=0),]
 write.table(data_clonesInference,"/Users/Pinedasans/Data/VDJ/data_clonesInference.txt",row.names = F,sep="\t") 
 
+
 ####Downsampling by cDNA and gDNA and put together to pass python program
 ##cDNA 62173 read is the minimum (after QC)
 data_clonesInference_cDNA<-data_clonesInference[which(data_clonesInference$amplification_template=="cDNA"),]
@@ -148,7 +149,7 @@ for(i in files) {
   t$dataset<-rep(i,nrow(t))
   data_clonesInference <- rbind(data_clonesInference, t)
 }
-save(data_clonesInference, file="ClonesInfered_downsampled.RData")
+save(data_clonesInference, file="ClonesInfered_downsampled_amp.RData")
 
 ##Read counts and clones per sample and data point
 read_count <- table(data_clonesInference$specimen_label,data_clonesInference$dataset)
@@ -247,41 +248,41 @@ id.sample <- match(rownames(reads_clones_down),clin_annot$specimen_id)
 reads_clones_down_annot <- cbind(clin_annot[id.sample,], reads_clones_down)
 write.csv(reads_clones_down_annot, "total_reads_clones_down.csv", row.names = F)
 
-save(data_clonesInference,reads_clones_down_annot,file="/Users/Pinedasans/Data/VDJ/VDJ_downSampled.Rdata")
+save(data_clonesInference_ind,reads_clones_down_annot,file="/Users/Pinedasans/Data/VDJ/VDJ_downSampled_amp.Rdata")
 
-#############################################################
-#### ReadData DownSampling by Individual SecondMinimum ######
-#############################################################
+#################################################
+#### ReadData DownSampling by Individual  ######
+#################################################
 
 #Read data from the output file from CloneInference.py
 ##Read all the files and save into and Rdata all together
-files <- list.files("/Users/Pinedasans/Data/VDJ/ClonesInferedIndividual_2minimum/")
-data_clonesInference_2 <- c()
+files <- list.files("/Users/Pinedasans/Data/VDJ/ClonesInferedMinimum/")
+data_clonesInference_ind <- c()
 for(i in files) {
   cat(i, "\n")
-  t <- read.csv(paste("ClonesInferedIndividual_2minimum/", i, sep = ""))
+  t <- read.csv(paste("ClonesInferedMinimum/", i, sep = ""))
   t$dataset<-rep(i,nrow(t))
-  data_clonesInference_2 <- rbind(data_clonesInference_2, t)
+  data_clonesInference_ind <- rbind(data_clonesInference_ind, t)
 }
-save(data_clonesInference_2, file="ClonesInfered_2_downsampled.RData")
+save(data_clonesInference_ind, file="ClonesInfered_downsampled_individual.RData")
 
 ##Read counts and clones per sample and data point
-read_count <- table(data_clonesInference_2$specimen_label,data_clonesInference_2$dataset)
+read_count <- table(data_clonesInference_ind$specimen_label,data_clonesInference_ind$dataset)
 read_count<-apply(read_count,1,mean)
 
 read_count_gDNA<-NULL
 read_count_cDNA<-NULL
 for (i in 1:5){
-  read_count_gDNA<- rbind(read_count_gDNA,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$amplification_template[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,2])
-  read_count_cDNA<- rbind(read_count_cDNA,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$amplification_template[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,1])
+  read_count_gDNA<- rbind(read_count_gDNA,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$amplification_template[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,2])
+  read_count_cDNA<- rbind(read_count_cDNA,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$amplification_template[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,1])
 }
 read_count_gDNA<-apply(read_count_gDNA,2,mean)
 read_count_cDNA<-apply(read_count_cDNA,2,mean)
 read_count_amplification<-cbind(read_count_gDNA,read_count_cDNA)
 
-data_clonesInference_2$isotype <- substr(data_clonesInference_2$isosubtype, 1, 4)
+data_clonesInference_ind$isotype <- substr(data_clonesInference_ind$isosubtype, 1, 4)
 read_count_UNMAPPED<-NULL
 read_count_IGHA<-NULL
 read_count_IGHD<-NULL
@@ -289,18 +290,18 @@ read_count_IGHE<-NULL
 read_count_IGHG<-NULL
 read_count_IGHM<-NULL
 for (i in 1:5){
-  read_count_UNMAPPED<- rbind(read_count_UNMAPPED,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                        data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,1])
-  read_count_IGHA<- rbind(read_count_IGHA,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,2])
-  read_count_IGHD<- rbind(read_count_IGHD,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,3])
-  read_count_IGHE<- rbind(read_count_IGHE,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,4])
-  read_count_IGHG<- rbind(read_count_IGHG,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,5])
-  read_count_IGHM<- rbind(read_count_IGHM,table(data_clonesInference_2$specimen_label[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
-                                                data_clonesInference_2$isotype[which(data_clonesInference_2$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,6])
+  read_count_UNMAPPED<- rbind(read_count_UNMAPPED,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                        data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,1])
+  read_count_IGHA<- rbind(read_count_IGHA,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,2])
+  read_count_IGHD<- rbind(read_count_IGHD,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,3])
+  read_count_IGHE<- rbind(read_count_IGHE,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,4])
+  read_count_IGHG<- rbind(read_count_IGHG,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,5])
+  read_count_IGHM<- rbind(read_count_IGHM,table(data_clonesInference_ind$specimen_label[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))],
+                                                data_clonesInference_ind$isotype[which(data_clonesInference_ind$dataset==paste("ClonesInfered_downsampled_",i,".csv",sep=""))])[,6])
   
 }
 read_count_UNMAPPED<-apply(read_count_UNMAPPED,2,mean)
@@ -317,8 +318,8 @@ colnames(read_count_isotype) <- paste(colnames(read_count_isotype), "isotypes", 
 reads <- cbind(read_count,read_count_amplification,read_count_isotype)
 
 ##Count number of clones per sample downsampled 
-data_clonesInference_2$V_J_lenghCDR3_Clone = paste(data_clonesInference_2$V_J_lenghCDR3,data_clonesInference_2$numberClone,sep="_")
-read_count_Clones<- unique(data_clonesInference_2[,c("specimen_label","V_J_lenghCDR3_Clone","amplification_template","dataset")])
+data_clonesInference_ind$V_J_lenghCDR3_Clone = paste(data_clonesInference_ind$V_J_lenghCDR3,data_clonesInference_ind$numberClone,sep="_")
+read_count_Clones<- unique(data_clonesInference_ind[,c("specimen_label","V_J_lenghCDR3_Clone","amplification_template","dataset")])
 clones_down<-data.matrix(table(read_count_Clones$specimen_label,read_count_Clones$dataset))
 clones_down<-apply(clones_down,1,mean)
 
@@ -336,8 +337,8 @@ clones_down_amplification<-cbind(clones_down_gDNA,clones_down_cDNA)
 clones_down<-cbind(clones_down,clones_down_amplification)
 
 ####Cpunt number of cloned per sample igh
-data_clonesInference_2$V_J_lenghCDR3_Clone_igh = paste(data_clonesInference_2$V_J_lenghCDR3,data_clonesInference_2$igh_clone_id,sep="_")
-read_count_Clones_igh<- unique(data_clonesInference_2[,c("specimen_label","V_J_lenghCDR3_Clone_igh","amplification_template","dataset")])
+data_clonesInference_ind$V_J_lenghCDR3_Clone_igh = paste(data_clonesInference_ind$V_J_lenghCDR3,data_clonesInference_ind$igh_clone_id,sep="_")
+read_count_Clones_igh<- unique(data_clonesInference_ind[,c("specimen_label","V_J_lenghCDR3_Clone_igh","amplification_template","dataset")])
 clones_down_igh<-data.matrix(table(read_count_Clones_igh$specimen_label,read_count_Clones_igh$dataset))
 clones_down_igh<-apply(clones_down_igh,1,mean)
 
@@ -359,10 +360,10 @@ reads_clones_down <- cbind(reads,clones_down,clones_down_igh)
 
 ###To obtaion the overlapping samples between clinical annotation and data
 id.sample <- match(rownames(reads_clones_down),clin_annot$specimen_id)
-reads_clones_down_annot_2 <- cbind(clin_annot[id.sample,], reads_clones_down)
-write.csv(reads_clones_down_annot_2, "total_reads_clones_down_2.csv", row.names = F)
+reads_clones_down_annot_ind<- cbind(clin_annot[id.sample,], reads_clones_down)
+write.csv(reads_clones_down_annot_ind, "total_reads_clones_down_ind.csv", row.names = F)
 
-save(data_clonesInference_2,reads_clones_down_annot_2,file="/Users/Pinedasans/Data/VDJ/VDJ_downSampled_2.Rdata")
+save(data_clonesInference_ind,reads_clones_down_annot_ind,file="/Users/Pinedasans/Data/VDJ/VDJ_downSampled_ind.Rdata")
 
 ##################################################
 #### ReadData DownSampling by Amplification ######
