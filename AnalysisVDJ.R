@@ -18,374 +18,268 @@ library(entropy)
 library(ggplot2)
 library(untb)
 library(lme4)
+library(sjPlot)
 
-setwd("/Users/Pinedasans/Documents/VDJ/")
+setwd("/Users/Pinedasans/VDJ/Results/")
+load("/Users/Pinedasans/VDJ/Data/VDJ.Rdata")
 
-load("/Users/Pinedasans/Data/VDJ/VDJ.Rdata")
-load("/Users/Pinedasans/Data/VDJ/VDJ_downSampled.Rdata")
-load("/Users/Pinedasans/Data/VDJ/VDJ_amplification_downSampled.Rdata")
-
-##########################################################
-####Calculate entropy with downsampling by individual ####
-#########################################################
-
-###Clonotype for gDNA 
-data_clonesInference_gDNA<-data_clonesInference[which(data_clonesInference$amplification_template=="gDNA"),]
-specimen_unique<-unique(data_clonesInference$specimen_label)
-
-data_clone_specimen<-NULL
-clone_entropy<-matrix(NA,length(specimen_unique),5)
-simpson<-matrix(NA,length(specimen_unique),5)
-for(j in 1:5){
-  print(j)
-  data_clone_dataset<-data_clonesInference_gDNA[which(data_clonesInference_gDNA$dataset==paste("ClonesInfered_downsampled_",j,".csv",sep="")),]
-  for (i in 1:length(specimen_unique)){
-    #print(i)
-    data_specimen_unique<-data_clone_dataset[which(data_clone_dataset$specimen_label==specimen_unique[i]),]
-    clone_entropy[i,j]<-entropy(as.numeric(data_specimen_unique[,"numberClone"]))
-    simpson[i,j]<-simpson(table(as.numeric(data_specimen_unique[,"numberClone"])))
-  }
-}
-
-clone_entropy_mean<-apply(clone_entropy,1,function(x) mean(x,na.rm=T))
-clone_entropy_norm<-clone_entropy_mean/max(clone_entropy_mean,na.rm = T)
-clonality<-(1-clone_entropy_norm)
-names(clonality)<-specimen_unique
-
-id.sample<-match(names(clonality),reads_clones_down_annot$specimen_id)
-reads_clones_down_annot[id.sample,"clonality_gDNA"]<-clonality
-
-###Clones longitudional
-reads_clones_annot_down_Long<-reads_clones_down_annot[which(reads_clones_down_annot$clin!="AR" & reads_clones_down_annot$clin!="pre-AR"),]
-clinLong<-factor(reads_clones_annot_down_Long$clin, levels=c("NP", "PNR", "PR"))
-
-##gDNA
-reads_clones_annot_Long_gDNA <- reads_clones_annot_down_Long[which(reads_clones_annot_down_Long$read_count_gDNA>=100),] ## 67 samples (Discard samples with less than 100 reads)
-clinLong_gDNA <- clinLong[which(reads_clones_annot_down_Long$read_count_gDNA>=100)] #(Discard samples with less than 100 reads)
-
-p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clonality_gDNA, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
-  geom_line() +
-  geom_point() +
-  #ylim(0,120000) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("Clonality gDNA")
-
-par(mfrow = c(2, 2))  
-boxplot(reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)], 
-        main="Time 0", ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)], 
-        main="Time 6",ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)], ylab = "Clonality", 
-        main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)])
-anova(fit)
-
-boxplot(reads_clones_annot_AR_gDNA$clonality_gDNA ~ clinAR_gDNA, main = "AR" , ylab = "Number of clones",col = c("goldenrod","firebrick3"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_AR_gDNA$clonality_gDNA~ clinAR_gDNA))
-anova(fit)
+####################################################
+### Compare same individuals from gDNA and cDNA ###
+###################################################
 
 
+########################################
+####Calculate repertoire diversity ####
+#######################################
 
+##########
+## gDNA ##
+##########
 
-###Clonotype for cDNA 
-data_clonesInference_cDNA<-data_clonesInference[which(data_clonesInference$amplification_template=="cDNA"),]
-specimen_unique<-unique(data_clonesInference$specimen_label)
-
-data_clone_specimen<-NULL
-clone_entropy<-matrix(NA,length(specimen_unique),5)
-simpson<-matrix(NA,length(specimen_unique),5)
-for(j in 1:5){
-  print(j)
-  data_clone_dataset<-data_clonesInference_cDNA[which(data_clonesInference_cDNA$dataset==paste("ClonesInfered_downsampled_",j,".csv",sep="")),]
-  for (i in 1:length(specimen_unique)){
-    #print(i)
-    data_specimen_unique<-data_clone_dataset[which(data_clone_dataset$specimen_label==specimen_unique[i]),]
-    clone_entropy[i,j]<-entropy(as.numeric(data_specimen_unique[,"numberClone"]))
-    simpson[i,j]<-simpson(table(as.numeric(data_specimen_unique[,"numberClone"])))
-  }
-}
-
-clone_entropy_mean<-apply(clone_entropy,1,function(x) mean(x,na.rm=T))
-clone_entropy_norm<-clone_entropy_mean/max(clone_entropy_mean,na.rm = T)
-clonality<-(1-clone_entropy_norm)
-names(clonality)<-specimen_unique
-
-id.sample<-match(names(clonality),reads_clones_down_annot$specimen_id)
-reads_clones_down_annot[id.sample,"clonality_cDNA"]<-clonality
-
-###Clones longitudional
-reads_clones_annot_down_Long<-reads_clones_down_annot[which(reads_clones_down_annot$clin!="AR" & reads_clones_down_annot$clin!="pre-AR"),]
-clinLong<-factor(reads_clones_annot_down_Long$clin, levels=c("NP", "PNR", "PR"))
-
-##cDNA
-reads_clones_annot_Long_cDNA <- reads_clones_annot_down_Long[which(reads_clones_annot_down_Long$read_count_cDNA>=100),] ## 67 samples (Discard samples with less than 100 reads)
-clinLong_cDNA <- clinLong[which(reads_clones_annot_down_Long$read_count_cDNA>=100)] #(Discard samples with less than 100 reads)
-
-par(mfrow = c(1, 2))  
-boxplot(reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==6)] ~ clinLong_gDNA[which(reads_clones_annot_Long_cDNA$time==6)], 
-        main="Time 0", ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==6)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==6)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_cDNA$clonality_gDNA[which(reads_clones_annot_Long_cDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_cDNA$time==24)], ylab = "Clonality", 
-        main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==24)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==24)])
-anova(fit)
-
-
-
-##########################################################
-####Calculate entropy with downsampling by sample ####
-#########################################################
-
-###Clonotype for gDNA 
-data_clonesInference_gDNA<-data_clonesInference_amp[which(data_clonesInference_amp$amplification_template=="gDNA"),]
-specimen_unique<-unique(data_clonesInference_amp$specimen_label)
-
-data_clone_specimen<-NULL
-clone_entropy<-matrix(NA,length(specimen_unique),5)
-simpson<-matrix(NA,length(specimen_unique),5)
-for(j in 1:5){
-  print(j)
-  data_clone_dataset<-data_clonesInference_gDNA[which(data_clonesInference_gDNA$dataset==paste("ClonesInfered_downsampled_byAmplification_",j,".csv",sep="")),]
-  for (i in 1:length(specimen_unique)){
-    #print(i)
-    data_specimen_unique<-data_clone_dataset[which(data_clone_dataset$specimen_label==specimen_unique[i]),]
-    clone_entropy[i,j]<-entropy(as.numeric(data_specimen_unique[,"numberClone"]))
-    simpson[i,j]<-simpson(table(as.numeric(data_specimen_unique[,"numberClone"])))
-  }
-}
-
-clone_entropy_mean<-apply(clone_entropy,1,function(x) mean(x,na.rm=T))
-clone_entropy_norm<-clone_entropy_mean/max(clone_entropy_mean,na.rm = T)
-clonality<-(1-clone_entropy_norm)
-names(clonality)<-specimen_unique
-
-id.sample<-match(names(clonality),reads_clones_down_annot_amp$specimen_id)
-reads_clones_down_annot_amp[id.sample,"clonality_gDNA"]<-clonality
-
-###Clones longitudional
-reads_clones_annot_down_Long<-reads_clones_down_annot_amp[which(reads_clones_down_annot_amp$clin!="AR" & reads_clones_down_annot_amp$clin!="pre-AR"),]
-clinLong<-factor(reads_clones_annot_down_Long$clin, levels=c("NP", "PNR", "PR"))
-
-##gDNA
-reads_clones_annot_Long_gDNA <- reads_clones_annot_down_Long[which(reads_clones_annot_down_Long$read_count_gDNA>=100),] ## 67 samples (Discard samples with less than 100 reads)
-clinLong_gDNA <- clinLong[which(reads_clones_annot_down_Long$read_count_gDNA>=100)] #(Discard samples with less than 100 reads)
-
-p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clonality_gDNA, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
-  geom_line() +
-  geom_point() +
-  #ylim(0,120000) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("Clonality gDNA")
-
-par(mfrow = c(2, 2))  
-boxplot(reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)], 
-        main="Time 0", ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==0)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)], 
-        main="Time 6",ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==6)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)], ylab = "Clonality", 
-        main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_gDNA$clonality_gDNA[which(reads_clones_annot_Long_gDNA$time==24)]) ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)])
-anova(fit)
-
-boxplot(reads_clones_annot_AR_gDNA$clonality_gDNA ~ clinAR_gDNA, main = "AR" , ylab = "Number of clones",col = c("goldenrod","firebrick3"),ylim=c(0,0.5))
-fit = lm((reads_clones_annot_AR_gDNA$clonality_gDNA~ clinAR_gDNA))
-anova(fit)
-
-###Clonotype for cDNA 
-data_clonesInference_cDNA<-data_clonesInference_amp[which(data_clonesInference_amp$amplification_template=="cDNA"),]
-specimen_unique<-unique(data_clonesInference_amp$specimen_label)
-
-data_clone_specimen<-NULL
-clone_entropy<-matrix(NA,length(specimen_unique),5)
-simpson<-matrix(NA,length(specimen_unique),5)
-for(j in 1:5){
-  print(j)
-  data_clone_dataset<-data_clonesInference_cDNA[which(data_clonesInference_cDNA$dataset==paste("ClonesInfered_downsampled_byAmplification_",j,".csv",sep="")),]
-  for (i in 1:length(specimen_unique)){
-    #print(i)
-    data_specimen_unique<-data_clone_dataset[which(data_clone_dataset$specimen_label==specimen_unique[i]),]
-    clone_entropy[i,j]<-entropy(as.numeric(data_specimen_unique[,"numberClone"]))
-    simpson[i,j]<-simpson(table(as.numeric(data_specimen_unique[,"numberClone"])))
-  }
-}
-
-clone_entropy_mean<-apply(clone_entropy,1,function(x) mean(x,na.rm=T))
-clone_entropy_norm<-clone_entropy_mean/max(clone_entropy_mean,na.rm = T)
-clonality<-(1-clone_entropy_norm)
-names(clonality)<-specimen_unique
-
-id.sample<-match(names(clonality),reads_clones_down_annot_amp$specimen_id)
-reads_clones_down_annot_amp[id.sample,"clonality_cDNA"]<-clonality
-
-###Clones longitudional
-reads_clones_annot_down_Long<-reads_clones_down_annot_amp[which(reads_clones_down_annot_amp$clin!="AR" & reads_clones_down_annot_amp$clin!="pre-AR"),]
-clinLong<-factor(reads_clones_annot_down_Long$clin, levels=c("NP", "PNR", "PR"))
-
-##cDNA
-reads_clones_annot_Long_cDNA <- reads_clones_annot_down_Long[which(reads_clones_annot_down_Long$read_count_cDNA>=100),] ## 67 samples (Discard samples with less than 100 reads)
-clinLong_cDNA <- clinLong[which(reads_clones_annot_down_Long$read_count_cDNA>=100)] #(Discard samples with less than 100 reads)
-
-par(mfrow = c(1, 2))  
-boxplot((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==6)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==6)], 
-        main="Time 6",ylab = "Clonality", col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==6)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==6)])
-anova(fit)
-
-boxplot((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==24)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==24)], ylab = "Clonality", 
-        main="Time 24",col = c("chartreuse4", "dodgerblue3","darkorange2"))
-fit = lm((reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==24)]) ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==24)])
-anova(fit)
-
-
-
-############################################
-####Calculate entropy without downsampling#
-###########################################
-##gDNA
+## 1. Clones by Cells
 data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
-specimen_unique<-unique(data_qc$specimen_label)
 
-clone_entropy<-rep(NA,length(specimen_unique))
+##NP
+specimen_unique_NP<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$clin=="NP")])
+time<-unique(data_qc_gDNA$time[which(data_qc_gDNA$clin=="NP")])
+time<-time[order(time)]
+for (j in 1:length(time)){
+  specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
+  specimen_unique<-intersect(specimen_unique_time,specimen_unique_NP)
+  clones<-table(data_qc_gDNA$V_J_lenghCDR3_Clone_igh,data_qc_gDNA$specimen_label)
+  
+  for (i in 1:length(specimen_unique)){
+    data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(dim(data_qc_gDNA_specimen)[1]>=100){
+      clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
+      write.table(clones,file=paste("NP-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[i],".txt",sep=""))
+      tiff(paste("NP-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[i],".tiff",sep=""),width = 170, height = 190)
+      plot(data.matrix(table(clones)),ylim=c(0,1400),xlim=c(0,40),col=c("chartreuse4"),pch=19,xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
+      ggplot(data.matrix(table(clones)),aes())
+      dev.off()
+    }
+  }
+}
+##PNR
+specimen_unique_PNR<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$clin=="PNR")])
+time<-unique(data_qc_gDNA$time[which(data_qc_gDNA$clin=="PNR")])
+time<-time[order(time)]
+for (j in 1:length(time)){
+  specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
+  specimen_unique<-intersect(specimen_unique_time,specimen_unique_PNR)
+  for (i in 1:length(specimen_unique)){
+    data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(dim(data_qc_gDNA_specimen)[1]>=100){
+      clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
+      data.matrix(table(clones))
+      tiff(paste("PNR-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[1],".tiff",sep=""),width = 170, height = 190)
+      plot(data.matrix(table(clones)),ylim=c(0,1400),xlim=c(0,40),col=c("dodgerblue3"),pch=19,xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
+      dev.off()
+    }
+  }
+}
+##PR
+specimen_unique_PR<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$clin=="PR")])
+time<-unique(data_qc_gDNA$time[which(data_qc_gDNA$clin=="PR")])
+time<-time[order(time)]
+for (j in 1:length(time)){
+  specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
+  specimen_unique<-intersect(specimen_unique_time,specimen_unique_PR)
+  for (i in 1:length(specimen_unique)){
+    data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(dim(data_qc_gDNA_specimen)[1]>=100){
+      clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
+      tiff(paste("PR-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[1],".tiff",sep=""),width = 170, height = 190)
+      plot(data.matrix(table(clones)),ylim=c(0,1400),col=c("darkorange2"),pch=19,xlim=c(0,40),xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
+      dev.off()
+    }
+  }
+}
+##AR
+specimen_unique_AR<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$clin=="AR")])
+time<-unique(data_qc_gDNA$time[which(data_qc_gDNA$clin=="AR")])
+time<-time[order(time)]
+for (j in 1:length(time)){
+  specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
+  specimen_unique<-intersect(specimen_unique_time,specimen_unique_AR)
+  for (i in 1:length(specimen_unique)){
+    data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(dim(data_qc_gDNA_specimen)[1]>=100){
+      clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
+      tiff(paste("AR-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[1],".tiff",sep=""),width = 170, height = 190)
+      plot(data.matrix(table(clones)),ylim=c(0,1400),col=c("darkorange2"),pch=19,xlim=c(0,40),xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
+      dev.off()
+    }
+  }
+}
+
+##preAR
+specimen_unique_preAR<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$clin=="pre-AR")])
+time<-unique(data_qc_gDNA$time[which(data_qc_gDNA$clin=="pre-AR")])
+time<-time[order(time)]
+for (j in 1:length(time)){
+  specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
+  specimen_unique<-intersect(specimen_unique_time,specimen_unique_preAR)
+  for (i in 1:length(specimen_unique)){
+    data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
+    if(dim(data_qc_gDNA_specimen)[1]>=100){
+      clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
+      tiff(paste("pre-AR-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[1],".tiff",sep=""),width = 170, height = 190)
+      plot(data.matrix(table(clones)),ylim=c(0,1400),col=c("darkorange2"),pch=19,xlim=c(0,40),xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
+      dev.off()
+    }
+  }
+}
+
+
+## 2. Diversity measures
+#Species richness => Number of clones
+#Entropy
+#Clonality
+#Simpson
+specimen_unique<-unique(data_qc_gDNA$specimen_label)
+entropy<-rep(NA,length(specimen_unique))
 simpson<-rep(NA,length(specimen_unique))
 for (i in 1:length(specimen_unique)){
-  print(i)
+  #print(i)
   data_specimen_unique<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
-  clone_entropy[i]<-entropy(as.numeric(data_specimen_unique[,"igh_clone_id"]))
-  simpson[i]<-simpson(table(as.numeric(data_specimen_unique[,"igh_clone_id"])))
+  clones_specimen<-data_specimen_unique[,"V_J_lenghCDR3_Clone_igh"]
+  fi<-as.numeric(table(clones_specimen))/length(clones_specimen)
+  hi<-fi*log2(fi)
+  entropy[i]=-sum(hi)
+  simpson[i]=sum(fi*fi)
+  #entropy(table(clones_specimen)) returns the same result but by the fauls is the natural logarithm (log)
 }
 
-clone_entropy_norm<-clone_entropy/max(clone_entropy,na.rm = T)
-clonality<-(1-clone_entropy_norm)
+
+entropy_norm<-entropy/max(entropy,na.rm = T)
+clonality<-(1-entropy_norm)
 names(clonality)<-specimen_unique
+diversity<-cbind(clonality,entropy,simpson)
+write.csv(diversity,"diversity_gDNA.csv")
 
 
-id.sample<-match(names(clonality),reads_clones_annot$specimen_id)
-reads_clones_annot[id.sample,"clonality"]<-clonality
+####Statistical Analysis
+diversity<-read.table("/Users/Pinedasans/VDJ/Data/diversity.txt",sep="\t",header=T)
 
-##Separate Long and AR
-reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
-reads_clones_annot_AR<-reads_clones_annot[which(reads_clones_annot$clin=="AR" | reads_clones_annot$clin=="pre-AR"),]
+###Longitudinal Data
+diversity_long<-diversity[which(diversity$clin=="NP" | diversity$clin=="PNR" | diversity$clin=="PR"),]
+diversity_long_qc<-diversity_long[which(diversity_long$reads_gDNA>=100),]
+clinLong<-factor(diversity_long_qc$clin, levels=c("NP", "PNR", "PR"))
 
-clinLong<-factor(reads_clones_annot_Long$clin, levels=c("NP", "PNR", "PR"))
-clinAR<-factor(reads_clones_annot_AR$clin, levels=c("pre-AR","AR"))
-
-
-####gDNA
-reads_clones_annot_Long_gDNA<-reads_clones_annot_Long[which(reads_clones_annot_Long$gDNA_reads>=100),]
-clinLong_gDNA<-factor(reads_clones_annot_Long_gDNA$clin, levels=c("NP", "PNR", "PR"))
-
-p1<-ggplot(data=reads_clones_annot_Long_gDNA, aes(x=time, y=clonality, group=subject_id, shape=clinLong_gDNA, color=clinLong_gDNA)) +
+p1<-ggplot(data=diversity_long_qc, aes(x=time, y=clones_gDNA, group=Sample_id, shape=clinLong, color=clinLong)) +
   geom_line() +
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("Clonality Long gDNA")
+  ggtitle("Number Clones Longitudinal gDNA")
+
+diversity_long_qc$Sample_id_clin<-paste(diversity_long_qc$clin,"-",diversity_long_qc$Sample_id,sep="")
+g1<-ggplot(diversity_long_qc[1:24,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g2<-ggplot(diversity_long_qc[25:48,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g3<-ggplot(diversity_long_qc[49:69,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
 
 
 ###Fitthing a longitudinal model
-fm1 <- lmer(clonality~time + (time | Sample_id),data=reads_clones_annot_Long_gDNA)
-fm2 <- lmer(clonality~ time*clin + (time | Sample_id),data=reads_clones_annot_Long_gDNA)
-# also works with lme objects
+fm1 <- lmer(diversity_long_qc$simpson_gDNA~time +clin+ (time | Sample_id),data=diversity_long_qc)
+fm2 <- lmer(diversity_long_qc$simpson_gDNA~ time*clin + (time | Sample_id) ,data=diversity_long_qc)
+ggplot(fortify(fm2), aes(time, diversity_long_qc$simpson_gDNA, color=clin)) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  stat_summary(fun.data=mean_se, geom="pointrange") +
+  stat_summary(aes(y=.fitted), fun.y=mean, geom="line")
+anova(fm1, fm2) 
+sjp.glmer(fm2, type = "ri.pc",
+          show.se = TRUE)
+sjp.int(fm2)
+
+###AR
+diversity_AR<-diversity[which(diversity$clin=="AR" | diversity$clin=="pre-AR"),]
+diversity_AR_qc<-diversity_AR[which(diversity_AR$reads_gDNA>=100),]
+diversity_AR_qc$clin<-relevel(diversity_AR_qc$clin,ref="pre-AR")
+
+fm1 <- lmer(diversity_AR_qc$entropy_gDNA~1+ (1 | Sample_id),data=diversity_AR_qc)
+fm2 <- lmer(diversity_AR_qc$entropy_gDNA~ clin + (1 | Sample_id) ,data=diversity_AR_qc)
+ggplot(fortify(fm2), aes(clin, diversity_AR_qc$entropy_gDNA, color=clin)) +
+  scale_colour_manual(values=c("goldenrod","firebrick3")) +
+  stat_summary(fun.data=mean_se, geom="pointrange") +
+  stat_summary(aes(y=.fitted), fun.y=mean, geom="line")
 anova(fm1, fm2) 
 
-par(mfrow = c(2, 2))  
-boxplot(reads_clones_annot_Long_gDNA$clonality[which(reads_clones_annot_Long_gDNA$time==0)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==0)] , ylab = "Clonality", 
-        col = c("chartreuse4", "dodgerblue3","darkorange2"),main="Time 0")
-boxplot(reads_clones_annot_Long_gDNA$clonality[which(reads_clones_annot_Long_gDNA$time==6)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==6)] , ylab = "Clonality", 
-        col = c("chartreuse4", "dodgerblue3","darkorange2"),main = "Time 6")
-boxplot(reads_clones_annot_Long_gDNA$clonality[which(reads_clones_annot_Long_gDNA$time==24)] ~ clinLong_gDNA[which(reads_clones_annot_Long_gDNA$time==24)] , ylab = "Clonality", 
-        col = c("chartreuse4", "dodgerblue3","darkorange2"),main="Time 24")
 
-reads_clones_annot_AR_gDNA<-reads_clones_annot_AR[which(reads_clones_annot_AR$gDNA_reads>=100),]
-clinAR_gDNA<-factor(reads_clones_annot_AR_gDNA$clin, levels=c("pre-AR","AR"))
+##########
+## cDNA ##
+##########
 
-p2<-ggplot(data=reads_clones_annot_AR_gDNA, aes(x=time, y=clonality, group=subject_id, shape=clinAR_gDNA, color=clinAR_gDNA)) +
+## 1. Clones by Cells
+data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+
+## 2. Diversity measures
+#Species richness => Number of clones
+#Entropy
+#Clonality
+#Simpson
+specimen_unique<-unique(data_qc_cDNA$specimen_label)
+entropy<-rep(NA,length(specimen_unique))
+simpson<-rep(NA,length(specimen_unique))
+for (i in 1:length(specimen_unique)){
+  #print(i)
+  data_specimen_unique<-data_qc_cDNA[which(data_qc_cDNA$specimen_label==specimen_unique[i]),]
+  clones_specimen<-data_specimen_unique[,"V_J_lenghCDR3_Clone_igh"]
+  fi<-as.numeric(table(clones_specimen))/length(clones_specimen)
+  hi<-fi*log2(fi)
+  entropy[i]=-sum(hi)
+  simpson[i]=sum(fi*fi)
+  #entropy(table(clones_specimen)) returns the same result but by the fauls is the natural logarithm (log)
+}
+
+entropy_norm<-entropy/max(entropy,na.rm = T)
+clonality<-(1-entropy_norm)
+names(clonality)<-specimen_unique
+diversity<-cbind(clonality,entropy,simpson)
+write.csv(diversity,"diversity_cDNA.csv")
+
+
+####Statistical Analysis
+diversity<-read.table("/Users/Pinedasans/VDJ/Data/diversity.txt",sep="\t",header=T)
+
+###Longitudinal Data
+diversity_long<-diversity[which(diversity$clin=="NP" | diversity$clin=="PNR" | diversity$clin=="PR"),]
+diversity_long_qc<-diversity_long[which(diversity_long$reads_cDNA>=100),]
+clinLong<-factor(diversity_long_qc$clin, levels=c("NP", "PNR", "PR"))
+
+p1<-ggplot(data=diversity_long_qc, aes(x=time, y=clones_gDNA, group=Sample_id, shape=clinLong, color=clinLong)) +
   geom_line() +
-  geom_point() +
-  #ylim(0,120000) +
-  scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  ggtitle("Clonality AR gDNA")
-
-boxplot(reads_clones_annot_AR_gDNA$clonality ~ clinAR_gDNA , ylab = "Clonality", 
-        col = c("goldenrod","firebrick3"))
-fit = lm(reads_clones_annot_AR_gDNA$clonality ~ clinAR_gDNA)
-anova(fit)
-
-#####cDNA
-reads_clones_annot_Long_cDNA<-reads_clones_annot_Long[which(reads_clones_annot_Long$cDNA_reads>=100),]
-clinLong_cDNA<-factor(reads_clones_annot_Long_cDNA$clin, levels=c("NP", "PNR", "PR"))
-
-p1<-ggplot(data=reads_clones_annot_Long_cDNA, aes(x=time, y=clonality, group=subject_id, shape=clinLong_cDNA, color=clinLong_cDNA)) +
-  geom_line() + 
   geom_point() +
   #ylim(0,120000) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  ggtitle("Clonality Long cDNA")
+  ggtitle("Number Clones Longitudinal gDNA")
 
+diversity_long_qc$Sample_id_clin<-paste(diversity_long_qc$clin,"-",diversity_long_qc$Sample_id,sep="")
+ggplot(diversity_long_qc, aes(time, clones_cDNA)) + geom_point() + facet_grid(clin~Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
 
-reads_clones_annot_AR_cDNA<-reads_clones_annot_AR[which(reads_clones_annot_AR$cDNA_reads>=100),]
-clinAR_cDNA<-factor(reads_clones_annot_AR_cDNA$clin, levels=c("pre-AR","AR"))
+###Fitthing a longitudinal model
+fm1 <- lmer(diversity_long_qc$entropy_cDNA~time +clin+ (time | Sample_id),data=diversity_long_qc)
+fm2 <- lmer(diversity_long_qc$entropy_cDNA~ time*clin + (time | Sample_id) ,data=diversity_long_qc)
+ggplot(fortify(fm2), aes(time, diversity_long_qc$entropy_cDNA, color=clin)) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  stat_summary(fun.data=mean_se, geom="pointrange") +
+  stat_summary(aes(y=.fitted), fun.y=mean, geom="line")
+anova(fm1, fm2) 
+sjp.int(fm2)
 
-p2<-ggplot(data=reads_clones_annot_AR_cDNA, aes(x=time, y=clonality, group=subject_id, shape=clinAR_cDNA, color=clinAR_cDNA)) +
-  geom_line() +
-  geom_point() +
-  #ylim(0,120000) +
+###AR
+diversity_AR<-diversity[which(diversity$clin=="AR" | diversity$clin=="pre-AR"),]
+diversity_AR_qc<-diversity_AR[which(diversity_AR$reads_cDNA>=100),]
+diversity_AR_qc$clin<-relevel(diversity_AR_qc$clin,ref="pre-AR")
+
+fm1 <- lmer(diversity_AR_qc$entropy_cDNA~1+ (1 | Sample_id),data=diversity_AR_qc)
+fm2 <- lmer(diversity_AR_qc$entropy_cDNA~ clin + (1 | Sample_id) ,data=diversity_AR_qc)
+ggplot(fortify(fm2), aes(clin, diversity_AR_qc$entropy_cDNA, color=clin)) +
   scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  ggtitle("Clonality AR cDNA")
-
-
-
-
-##cDNA
-data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
-specimen_unique<-unique(data_qc$specimen_label)
-
-clone_entropy<-rep(NA,length(specimen_unique))
-simpson<-rep(NA,length(specimen_unique))
-for (i in 1:length(specimen_unique)){
-  print(i)
-  data_specimen_unique<-data_qc_cDNA[which(data_qc_cDNA$specimen_label==specimen_unique[i]),]
-  clone_entropy[i]<-entropy(as.numeric(data_specimen_unique[,"igh_clone_id"]))
-  simpson[i]<-simpson(table(as.numeric(data_specimen_unique[,"igh_clone_id"])))
-}
-
-clone_entropy_norm<-clone_entropy/max(clone_entropy,na.rm = T)
-clonality<-(1-clone_entropy_norm)
-names(clonality)<-specimen_unique
-
-
-id.sample<-match(names(clonality),reads_clones_annot$specimen_id)
-reads_clones_annot[id.sample,"clonality_cDNA"]<-clonality
-
-##Separate Long and AR
-reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
-reads_clones_annot_AR<-reads_clones_annot[which(reads_clones_annot$clin=="AR" | reads_clones_annot$clin=="pre-AR"),]
-
-clinLong<-factor(reads_clones_annot_Long$clin, levels=c("NP", "PNR", "PR"))
-clinAR<-factor(reads_clones_annot_AR$clin, levels=c("pre-AR","AR"))
-
-
-####cDNA
-reads_clones_annot_Long_cDNA<-reads_clones_annot_Long[which(reads_clones_annot_Long$cDNA_reads>=100),]
-clinLong_cDNA<-factor(reads_clones_annot_Long_cDNA$clin, levels=c("NP", "PNR", "PR"))
-
-par(mfrow = c(1, 2))  
-boxplot(reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==6)] ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==6)] , ylab = "Clonality", 
-        col = c("chartreuse4", "dodgerblue3","darkorange2"),main = "Time 6")
-boxplot(reads_clones_annot_Long_cDNA$clonality_cDNA[which(reads_clones_annot_Long_cDNA$time==24)] ~ clinLong_cDNA[which(reads_clones_annot_Long_cDNA$time==24)] , ylab = "Clonality", 
-        col = c("chartreuse4", "dodgerblue3","darkorange2"),main="Time 24")
-
+  stat_summary(fun.data=mean_se, geom="pointrange") +
+  stat_summary(aes(y=.fitted), fun.y=mean, geom="line")
+anova(fm1, fm2) 
