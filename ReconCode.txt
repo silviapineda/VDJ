@@ -1,0 +1,7 @@
+python2.7 recon_v2.2.py-R -t 30 -o test_NP-time0-ind1005_fitfile.txt NP-time0-ind1005.txt
+python2.7 recon_v2.2.py -R -t 30 -o test_NP-time24-ind300013_fitfile.txt NP-time24-ind300013.txt
+
+python2.7 recon_v2.2.py -D -Q 0 1 inf -b error_bar_parameters.txt –o test_D_number_table.txt test_NP-time0-ind1005_fitfile.txt test_NP-time24-ind300013_fitfile.txt
+
+python2.7 recon_v2.2.py -x --x_max 30 -o test_NP-time24-ind300013_plotfile.txt -b error_bar_parameters.txt test_NP-time24-ind300013_fitfile.txt
+
