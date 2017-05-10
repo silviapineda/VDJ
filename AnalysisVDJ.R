@@ -47,7 +47,6 @@ for (j in 1:length(time)){
   specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
   specimen_unique<-intersect(specimen_unique_time,specimen_unique_NP)
   clones<-table(data_qc_gDNA$V_J_lenghCDR3_Clone_igh,data_qc_gDNA$specimen_label)
-  
   for (i in 1:length(specimen_unique)){
     data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
     if(dim(data_qc_gDNA_specimen)[1]>=100){
@@ -151,6 +150,9 @@ for (i in 1:length(specimen_unique)){
   #entropy(table(clones_specimen)) returns the same result but by the fauls is the natural logarithm (log)
 }
 
+xx<-data.frame(table(table(clones_specimen)))
+yy<-as.numeric(xx[,1])%*%as.numeric(xx[,2])
+rep(xx$Var1[1]/sum(xx$Freq))
 
 entropy_norm<-entropy/max(entropy,na.rm = T)
 clonality<-(1-entropy_norm)
@@ -174,14 +176,29 @@ p1<-ggplot(data=diversity_long_qc, aes(x=time, y=clones_gDNA, group=Sample_id, s
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   ggtitle("Number Clones Longitudinal gDNA")
 
-diversity_long_qc$Sample_id_clin<-paste(diversity_long_qc$clin,"-",diversity_long_qc$Sample_id,sep="")
-g1<-ggplot(diversity_long_qc[1:24,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+##Number of clones
+g1<-ggplot(diversity_long_qc[1:24,], aes(time, clones_gDNA)) + scale_y_continuous(limit = c(0,5000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
   geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
-g2<-ggplot(diversity_long_qc[25:48,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+g2<-ggplot(diversity_long_qc[25:48,], aes(time, clones_gDNA)) + geom_point() + scale_y_continuous(limit = c(0,5000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
   geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
-g3<-ggplot(diversity_long_qc[49:69,], aes(time, clones_gDNA)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+g3<-ggplot(diversity_long_qc[49:69,], aes(time, clones_gDNA)) + geom_point() + scale_y_continuous(limit = c(0,5000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
   geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+multiplot(g1, g2, g3, rows=3)
 
+##Entropy
+g1<-ggplot(diversity_long_qc[1:24,], aes(time, entropy_gDNA)) + scale_y_continuous(limit = c(6,12)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g2<-ggplot(diversity_long_qc[25:48,], aes(time, entropy_gDNA)) + geom_point() + scale_y_continuous(limit = c(6,12)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g3<-ggplot(diversity_long_qc[49:69,], aes(time, entropy_gDNA)) + geom_point() + scale_y_continuous(limit = c(6,12)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+multiplot(g1, g2, g3, rows=3)
 
 ###Fitthing a longitudinal model
 fm1 <- lmer(diversity_long_qc$simpson_gDNA~time +clin+ (time | Sample_id),data=diversity_long_qc)
@@ -200,6 +217,17 @@ diversity_AR<-diversity[which(diversity$clin=="AR" | diversity$clin=="pre-AR"),]
 diversity_AR_qc<-diversity_AR[which(diversity_AR$reads_gDNA>=100),]
 diversity_AR_qc$clin<-relevel(diversity_AR_qc$clin,ref="pre-AR")
 
+##Number of clones
+ggplot(diversity_AR_qc, aes(clin, clones_gDNA,group=Sample_id)) +
+  geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
+  labs(x = "clin", y = "Clones")
+
+##Entropy
+ggplot(diversity_AR_qc, aes(clin, entropy_gDNA,group=Sample_id)) +
+  geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
+  labs(x = "clin", y = "Clones")
+
+##Fitting a longitudinal model 
 fm1 <- lmer(diversity_AR_qc$entropy_gDNA~1+ (1 | Sample_id),data=diversity_AR_qc)
 fm2 <- lmer(diversity_AR_qc$entropy_gDNA~ clin + (1 | Sample_id) ,data=diversity_AR_qc)
 ggplot(fortify(fm2), aes(clin, diversity_AR_qc$entropy_gDNA, color=clin)) +
@@ -257,9 +285,29 @@ p1<-ggplot(data=diversity_long_qc, aes(x=time, y=clones_gDNA, group=Sample_id, s
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   ggtitle("Number Clones Longitudinal gDNA")
 
-diversity_long_qc$Sample_id_clin<-paste(diversity_long_qc$clin,"-",diversity_long_qc$Sample_id,sep="")
-ggplot(diversity_long_qc, aes(time, clones_cDNA)) + geom_point() + facet_grid(clin~Sample_id) + 
+##Number of clones
+g1<-ggplot(diversity_long_qc[1:18,], aes(time, clones_cDNA)) + scale_y_continuous(limit = c(0,80000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
   geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g2<-ggplot(diversity_long_qc[19:38,], aes(time, clones_cDNA)) + geom_point() + scale_y_continuous(limit = c(0,80000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g3<-ggplot(diversity_long_qc[39:55,], aes(time, clones_cDNA)) + geom_point() + scale_y_continuous(limit = c(0,80000)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+multiplot(g1, g2, g3, rows=3)
+
+##Entropy
+g1<-ggplot(diversity_long_qc[1:18,], aes(time, entropy_cDNA)) + scale_y_continuous(limit = c(10,16)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g2<-ggplot(diversity_long_qc[19:38,], aes(time, entropy_cDNA)) + geom_point() + scale_y_continuous(limit = c(10,16)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+g3<-ggplot(diversity_long_qc[39:55,], aes(time, entropy_cDNA)) + geom_point() + scale_y_continuous(limit = c(10,16)) + 
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+multiplot(g1, g2, g3, rows=3)
 
 ###Fitthing a longitudinal model
 fm1 <- lmer(diversity_long_qc$entropy_cDNA~time +clin+ (time | Sample_id),data=diversity_long_qc)
@@ -275,6 +323,16 @@ sjp.int(fm2)
 diversity_AR<-diversity[which(diversity$clin=="AR" | diversity$clin=="pre-AR"),]
 diversity_AR_qc<-diversity_AR[which(diversity_AR$reads_cDNA>=100),]
 diversity_AR_qc$clin<-relevel(diversity_AR_qc$clin,ref="pre-AR")
+
+##Number of clones
+ggplot(diversity_AR_qc, aes(clin, clones_cDNA,group=Sample_id)) +
+  geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
+  labs(x = "clin", y = "Clones")
+
+##Entropy
+ggplot(diversity_AR_qc, aes(clin, entropy_cDNA,group=Sample_id)) +
+  geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
+  labs(x = "clin", y = "Clones")
 
 fm1 <- lmer(diversity_AR_qc$entropy_cDNA~1+ (1 | Sample_id),data=diversity_AR_qc)
 fm2 <- lmer(diversity_AR_qc$entropy_cDNA~ clin + (1 | Sample_id) ,data=diversity_AR_qc)
