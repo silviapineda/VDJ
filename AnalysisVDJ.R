@@ -19,6 +19,7 @@ library(ggplot2)
 library(untb)
 library(lme4)
 library(sjPlot)
+library("caroline")
 
 setwd("/Users/Pinedasans/VDJ/Results/")
 load("/Users/Pinedasans/VDJ/Data/VDJ.Rdata")
@@ -46,12 +47,12 @@ time<-time[order(time)]
 for (j in 1:length(time)){
   specimen_unique_time<-unique(data_qc_gDNA$specimen_label[which(data_qc_gDNA$time==time[j])])
   specimen_unique<-intersect(specimen_unique_time,specimen_unique_NP)
-  clones<-table(data_qc_gDNA$V_J_lenghCDR3_Clone_igh,data_qc_gDNA$specimen_label)
+  #clones<-table(data_qc_gDNA$V_J_lenghCDR3_Clone_igh,data_qc_gDNA$specimen_label)
   for (i in 1:length(specimen_unique)){
     data_qc_gDNA_specimen<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
     if(dim(data_qc_gDNA_specimen)[1]>=100){
       clones<-table(data_qc_gDNA_specimen$V_J_lenghCDR3_Clone_igh)
-      write.table(clones,file=paste("NP-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[i],".txt",sep=""))
+      #write.table(clones,file=paste("NP-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[i],".txt",sep=""))
       tiff(paste("NP-time",time[j],"-ind",data_qc_gDNA_specimen$sample_id[i],".tiff",sep=""),width = 170, height = 190)
       plot(data.matrix(table(clones)),ylim=c(0,1400),xlim=c(0,40),col=c("chartreuse4"),pch=19,xlab = "Number of Cells",ylab = "Number of clones",main = paste("ind=",data_qc_gDNA_specimen$sample_id[1],",time=",data_qc_gDNA_specimen$time[1],sep=""))
       ggplot(data.matrix(table(clones)),aes())
@@ -143,23 +144,45 @@ for (i in 1:length(specimen_unique)){
   #print(i)
   data_specimen_unique<-data_qc_gDNA[which(data_qc_gDNA$specimen_label==specimen_unique[i]),]
   clones_specimen<-data_specimen_unique[,"V_J_lenghCDR3_Clone_igh"]
-  fi<-as.numeric(table(clones_specimen))/length(clones_specimen)
-  hi<-fi*log2(fi)
-  entropy[i]=-sum(hi)
-  simpson[i]=sum(fi*fi)
+  #To write file to run with Recon
+  write.delim(data.frame(table(table(clones_specimen))),file=paste("clones_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
+  #fi<-as.numeric(table(clones_specimen))/length(clones_specimen)
+  #hi<-fi*log2(fi)
+  #entropy[i]=-sum(hi)
+  #simpson[i]=sum(fi*fi)
   #entropy(table(clones_specimen)) returns the same result but by the fauls is the natural logarithm (log)
 }
-
-xx<-data.frame(table(table(clones_specimen)))
-yy<-as.numeric(xx[,1])%*%as.numeric(xx[,2])
-rep(xx$Var1[1]/sum(xx$Freq))
-
 entropy_norm<-entropy/max(entropy,na.rm = T)
 clonality<-(1-entropy_norm)
 names(clonality)<-specimen_unique
 diversity<-cbind(clonality,entropy,simpson)
 write.csv(diversity,"diversity_gDNA.csv")
 
+####Formula for entropy considering the compress type of data to pass from Recon
+###Read the files with the imputed repertoire from Recon
+files <- list.files("/Users/Pinedasans/programs/Recon-master2/gDNA/results/")
+entropy_estimates<-rep(NA,length(files))
+simpson_estimates<-rep(NA,length(files))
+k=1
+for(i in files){
+  result <- read.delim(paste("/Users/Pinedasans/programs/Recon-master2/gDNA/results/",i, sep = ""))
+  clones_estimates<-result[-1,c(1,3)]
+  yy<-as.numeric(clones_estimates[,1])*as.numeric(clones_estimates[,2])
+  sum(yy)##This is the total number of reads
+  fi<-NULL
+  for (j in 1:dim(clones_estimates)[1]){
+    fi<-c(fi,rep(as.numeric(clones_estimates$clone_size[j])/sum(yy),clones_estimates$fit[j]))
+  }
+  hi<-fi*log2(fi)
+  entropy_estimates[k]=-sum(hi)
+  simpson_estimates[k]=sum(fi*fi)
+  k=k+1
+}
+entropy_norm<-entropy_estimates/max(entropy_estimates,na.rm = T)
+clonality<-(1-entropy_norm)
+names(clonality)<-files
+diversity_estimates<-cbind(clonality,entropy_estimates,simpson_estimates)
+write.csv(diversity_estimates,"diversity_estimates_gDNA.csv")
 
 ####Statistical Analysis
 diversity<-read.table("/Users/Pinedasans/VDJ/Data/diversity.txt",sep="\t",header=T)
