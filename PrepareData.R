@@ -55,24 +55,25 @@ data_qc<-data_qc[which(data_qc$productive=="t"),]
 #############################################
 ####Prepare data without downsampling#######
 ############################################
-data_qc$clin = clin_annot[data_qc$specimen_label,1] ###Add the type of clinical endpoint
-data_qc$time = clin_annot[data_qc$specimen_label,4] ###Add the time it was taking
-data_qc$sample_id = clin_annot[data_qc$specimen_label,2] ###Add the sample_id
+data_qc_order = data_qc[order(data_qc$specimen_label),]
+data_qc_order$clin = clin_annot[data_qc_order$specimen_label,1] ###Add the type of clinical endpoint
+data_qc_order$time = clin_annot[data_qc_order$specimen_label,4] ###Add the time it was taking
+data_qc_order$sample_id = clin_annot[data_qc_order$specimen_label,2] ###Add the sample_id
 
 ##Extract the gene from the segment with the allele
-data_qc$v_gene <- gsub("\\*", "", substr(data_qc$v_segment, 1, 8))
-data_qc$j_gene <- gsub("\\*", "", substr(data_qc$j_segment, 1, 5))
-data_qc$d_gene <- gsub("\\*", "", substr(data_qc$d_segment, 1, 8))
+data_qc_order$v_gene <- gsub("\\*", "", substr(data_qc_order$v_segment, 1, 8))
+data_qc_order$j_gene <- gsub("\\*", "", substr(data_qc_order$j_segment, 1, 5))
+data_qc_order$d_gene <- gsub("\\*", "", substr(data_qc_order$d_segment, 1, 8))
 
 ###Extrac the CDR3 region
-data_qc$cdr3_seq <- gsub(" ","", data_qc$cdr3_seq_nt_q)
+data_qc_order$cdr3_seq <- gsub(" ","", data_qc_order$cdr3_seq_nt_q)
 ###Extract the isotype
-data_qc$isotype <- substr(data_qc$isosubtype, 1, 4)
+data_qc_order$isotype <- substr(data_qc_order$isosubtype, 1, 4)
 
 ##Read counts and clones per sample and data point
-read_count <- table(data_qc$specimen_label)
-read_count_amplification <- table(data_qc$specimen_label,data_qc$amplification_template)
-read_count_isotype <- table(data_qc$specimen_label, data_qc$isotype)
+read_count <- table(data_qc_order$specimen_label)
+read_count_amplification <- table(data_qc_order$specimen_label,data_qc_order$amplification_template)
+read_count_isotype <- table(data_qc_order$specimen_label, data_qc_order$isotype)
 colnames(read_count_isotype)[1] = "UNMAPPED"
 colnames(read_count_isotype) <- paste(colnames(read_count_isotype), "isotypes", sep = "_")
 
@@ -81,8 +82,8 @@ colnames(reads)[1:3] <- c("total_reads","reads_cDNA","reads_gDNA")
  
 
 ##Count number of clones per sample using Krishna estimates
-data_qc$V_J_lenghCDR3_Clone_igh = paste(data_qc$v_gene, data_qc$j_gene, nchar(data_qc$cdr3_seq),data_qc$igh_clone_id,sep="_")
-read_count_ighClones<- unique(data_qc[,c("specimen_label","V_J_lenghCDR3_Clone_igh","amplification_template")])
+data_qc_order$V_J_lenghCDR3_Clone_igh = paste(data_qc_order$v_gene, data_qc_order$j_gene, nchar(data_qc_order$cdr3_seq),data_qc_order$igh_clone_id,sep="_")
+read_count_ighClones<- unique(data_qc_order[,c("specimen_label","V_J_lenghCDR3_Clone_igh","amplification_template")])
 clones_igh<-data.matrix(table(read_count_ighClones$specimen_label,read_count_ighClones$amplification_template))
 colnames(clones_igh)<-c("clones_cDNA","clones_gDNA")
 
@@ -92,8 +93,8 @@ reads_clones_igh<-cbind(reads,clones_igh)
 id.sample <- match(rownames(reads_clones_igh),clin_annot$specimen_id)
 reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh)
 write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
-
-save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data//VDJ.Rdata")
+data_qc<-data_qc_order
+save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
 
 
