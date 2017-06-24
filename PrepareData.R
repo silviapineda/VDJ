@@ -22,15 +22,15 @@ library("bcRep")
 setwd("/Users/Pinedasans/VDJ/Data/")
 
 ##Read all the files and save into and Rdata all together
-# files <- list.files("/Users/Pinedasans/Data/VDJ/part_tables_together/")
-# 
-# data <- c()
-# for(i in files) {
-#   cat(i, "\n")
-#   t <- read.delim(paste("part_tables_together/", i, sep = ""))
-#   data <- rbind(data, t)
-# }
-#save(data, file="new_merged_data.RData")
+files <- list.files("/Users/Pinedasans/Data/VDJ/part_tables_together/")
+
+data <- c()
+for(i in files) {
+  cat(i, "\n")
+  t <- read.delim(paste("part_tables_together/", i, sep = ""))
+  data <- rbind(data, t)
+}
+save(data, file="new_merged_data.RData")
 
 ###This is the data received from Krishna
 load("/Users/Pinedasans/VDJ/Data/new_merged_data.RData")
@@ -52,9 +52,9 @@ data_qc<-data[which(data$v_score>=140),]
 ##Discard the non-functional sequences
 data_qc<-data_qc[which(data_qc$productive=="t"),]
 
-#############################################
-####Prepare data without downsampling#######
-############################################
+#########################
+####Prepare data #######
+#######################
 data_qc_order = data_qc[order(data_qc$specimen_label),]
 data_qc_order$clin = clin_annot[data_qc_order$specimen_label,1] ###Add the type of clinical endpoint
 data_qc_order$time = clin_annot[data_qc_order$specimen_label,4] ###Add the time it was taking
@@ -65,7 +65,7 @@ data_qc_order$v_gene <- gsub("\\*", "", substr(data_qc_order$v_segment, 1, 8))
 data_qc_order$j_gene <- gsub("\\*", "", substr(data_qc_order$j_segment, 1, 5))
 data_qc_order$d_gene <- gsub("\\*", "", substr(data_qc_order$d_segment, 1, 8))
 
-###Extrac the CDR3 region
+###Extract the CDR3 region
 data_qc_order$cdr3_seq <- gsub(" ","", data_qc_order$cdr3_seq_nt_q)
 ###Extract the isotype
 data_qc_order$isotype <- substr(data_qc_order$isosubtype, 1, 4)
