@@ -70,6 +70,16 @@ data_qc_order$cdr3_seq <- gsub(" ","", data_qc_order$cdr3_seq_nt_q)
 ###Extract the isotype
 data_qc_order$isotype <- substr(data_qc_order$isosubtype, 1, 4)
 
+
+##Count the somatic hypermutations
+data_qc_order$Vlength<-nchar(as.character(data_qc_order$v_sequence))
+v_sequence = as.character(data_qc_order$v_sequence)
+data_qc_order$SHM<-sapply(regmatches(v_sequence, gregexpr("[A-Z]", v_sequence, perl=TRUE)), length)
+data_qc_order$SHM_freq<-data_qc_order$SHM/data_qc_order$Vlength
+
+##count the CDR3 length
+data_qc_order$CDR3_length<-nchar(as.character(data_qc_order$cdr3_seq))
+
 ##Read counts and clones per sample and data point
 read_count <- table(data_qc_order$specimen_label)
 read_count_amplification <- table(data_qc_order$specimen_label,data_qc_order$amplification_template)
@@ -89,13 +99,31 @@ colnames(clones_igh)<-c("clones_cDNA","clones_gDNA")
 
 reads_clones_igh<-cbind(reads,clones_igh)
 
+#####SHM
+sum_SHM<-aggregate(data_qc_order$SHM, by=list(data_qc_order$specimen_label,data_qc_order$amplification_template), FUN=sum)
+sum_SHM_gDNA<-sum_SHM[which(sum_SHM$Group.2=="gDNA"),]
+sum_SHM_cDNA<-sum_SHM[which(sum_SHM$Group.2=="cDNA"),]
+id_gDNA<-match(rownames(reads_clones_igh),sum_SHM_gDNA$Group.1)
+id_cDNA<-match(rownames(reads_clones_igh),sum_SHM_cDNA$Group.1)
+reads_clones_igh_SHM<-cbind(reads_clones_igh,sum_SHM_gDNA$x[id_gDNA],sum_SHM_cDNA$x[id_cDNA])
+colnames(reads_clones_igh_SHM)[12:13]<-c("SHM_gDNA","SHM_cDNA")
+
+###length of CDR3
+cdr3_length<-aggregate(data_qc_order$CDR3_length,by=list(data_qc_order$specimen_label,data_qc_order$amplification_template), FUN=mean)
+cdr3_length_gDNA<-cdr3_length[which(cdr3_length$Group.2=="gDNA"),]
+cdr3_length_cDNA<-cdr3_length[which(cdr3_length$Group.2=="cDNA"),]
+id_gDNA<-match(rownames(reads_clones_igh),cdr3_length_gDNA$Group.1)
+id_cDNA<-match(rownames(reads_clones_igh),cdr3_length_cDNA$Group.1)
+reads_clones_igh_cdr3length<-cbind(reads_clones_igh_SHM,cdr3_length_gDNA$x[id_gDNA],cdr3_length_cDNA$x[id_cDNA])
+colnames(reads_clones_igh_cdr3length)[14:15]<-c("mean_CDR3_length_gDNA","mean_CDR3_length_cDNA")
+
+
 ###To obtain the overlapping samples between clinical annotation and data
-id.sample <- match(rownames(reads_clones_igh),clin_annot$specimen_id)
-reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh)
+id.sample <- match(rownames(reads_clones_igh_cdr3length),clin_annot$specimen_id)
+reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh_cdr3length)
 write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
 data_qc<-data_qc_order
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
-
 
 
 
