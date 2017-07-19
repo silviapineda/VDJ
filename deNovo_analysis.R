@@ -73,33 +73,57 @@ data_annot<-annot[match(names(deNovo),annot$Sample_id),c(1,2,4,6:24)]
 
 #clin
 summary(glm(deNovo~data_annot$clin))
-boxplot(deNovo~data_annot$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"))
+anova(lm(deNovo~data_annot$clin))
+tiff("boxplot_deNovo_clin_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="deNovo Clones by Clin")
+dev.off()
+
 
 ##Multivariable analysis
 summary(glm(deNovo~clin+immunosuppression+recipient.Race+GenderMismatch+
               Recipient.Age.when.had.Tx+Donor.Source+hla_mismatch,data=data_annot))
 
+fit<-lm(deNovo~clin+immunosuppression+GenderMismatch+
+              Recipient.Age.when.had.Tx+Donor.Source+hla_mismatch,data=data_annot)
+library(MASS)
+step<-stepAIC(fit,direction="both")
+step$anova
+
 #immunosuppression
 COLOR=brewer.pal(5,"Set1")
+tiff("boxplot_deNovo_immuno_gDNA.tiff",h=2000,w=1800,res=300)
 summary(glm(deNovo~data_annot$immunosuppression))
-boxplot(deNovo~data_annot$immunosuppression,col=COLOR)
+boxplot(deNovo~data_annot$immunosuppression,col=COLOR,main="deNovo Clones by Immunosuppression")
+dev.off()
 
 #Recipient Race
 summary(glm(deNovo~data_annot$recipient.Race))
-boxplot(deNovo~data_annot$recipient.Race,col=COLOR)
+tiff("boxplot_deNovo_recRace_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$recipient.Race,col=COLOR,main="deNovo Clones by Recipient Race")
+dev.off()
 
 #Gender mismatch
 summary(glm(deNovo~data_annot$GenderMismatch))
-boxplot(deNovo~data_annot$GenderMismatch,col=COLOR)
+tiff("boxplot_deNovo_GenderMismatch_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$GenderMismatch,col=COLOR,main="deNovo Clones by Gender Mismatch")
+dev.off()
 
 #Age Recipient
 summary(glm(deNovo~data_annot$Recipient.Age.when.had.Tx))
-plot(deNovo~data_annot$Recipient.Age.when.had.Tx)
+tiff("boxplot_deNovo_AgeRec_gDNA.tiff",h=2000,w=1800,res=300)
+plot(deNovo~data_annot$Recipient.Age.when.had.Tx,pch = 16, cex = 1.3, col = "blue",main="deNovo Clones by Recipient Race")
+abline(lm(deNovo~data_annot$Recipient.Age.when.had.Tx))
+dev.off()
 
 #Donor.Source
 summary(glm(deNovo~data_annot$Donor.Source))
-boxplot(deNovo~data_annot$Donor.Source,col=COLOR)
+tiff("boxplot_deNovo_DonorSource_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$Donor.Source,col=COLOR,main="deNovo Clones by Donor Source")
+dev.off()
 
 #hla_mismatch
 summary(glm(deNovo~data_annot$hla_mismatch))
-boxplot(deNovo~data_annot$hla_mismatch,col=COLOR)
+tiff("boxplot_deNovo_hla_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$hla_mismatch,col=COLOR,main="deNovo Clones by HLA mismatch")
+dev.off()
+
