@@ -221,6 +221,14 @@ g3<-ggplot(diversity_long_gDNA[49:69,], aes(time, simpson_gDNA)) + geom_point() 
   geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
 multiplot(g1, g2, g3, rows=3)
 
+
+##correlation 
+cor(diversity_long_gDNA$reads_gDNA,diversity_long_gDNA$clonality_gDNA)
+qplot(clones_gDNA, clonality_gDNA, data = diversity_long_gDNA, colour = clin) +
+  scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2"))
+
+
+
 ##################################
 #####Analysis by time and clin ##
 ##################################
@@ -241,8 +249,12 @@ p3 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==24),],
 
 multiplot(p1,p2,p3)
 dev.off()
+summary(glm(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==0)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]))
 summary(glm(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==6)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]))
 summary(glm(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==24)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]))
+
+summary(glm(diversity_long_gDNA$clones_gDNA ~ diversity_long_gDNA$clin))
+
 
 tiff("boxplot_entropy_gDNA.tiff",h=2000,w=1800,res=300)
 p1 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==0),], 

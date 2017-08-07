@@ -58,14 +58,18 @@ data_qc_gDNA_long_clean<-data_qc_gDNA_long_qc3
 ##Obtain deNovo number of clones
 sample_id<-unique(data_qc_gDNA_long_clean$sample_id)
 deNovo<-NULL
+persistance<-NULL
 for (i in 1:length(sample_id)){
   print(i)
   clone_type_matrix<-as.data.frame.matrix(table(data_qc_gDNA_long_clean$V_J_lenghCDR3_Clone_igh[which(data_qc_gDNA_long_clean$sample_id==sample_id[i])],
                                       factor(data_qc_gDNA_long_clean$specimen_label[which(data_qc_gDNA_long_clean$sample_id==sample_id[i])])))
   clone_type_matrix$deNovo<-ifelse(clone_type_matrix[,1] == 0 & (clone_type_matrix[,2] !=0 | clone_type_matrix[,3] !=0),1,0)
+  clone_type_matrix$persistance<-ifelse(clone_type_matrix[,1] > 0 & clone_type_matrix[,2] > 0 & clone_type_matrix[,3] >0,1,0)
   deNovo[i]<-sum(clone_type_matrix$deNovo)
+  persistance[i]<-sum(clone_type_matrix$persistance)
 }
 names(deNovo)<-sample_id
+names(persistance)<-sample_id
 
 ###Read the clean annotated data
 annot<-read.csv("/Users/Pinedasans/VDJ/Data/Annot_clean_long_gDNA.csv")
@@ -127,3 +131,66 @@ tiff("boxplot_deNovo_hla_gDNA.tiff",h=2000,w=1800,res=300)
 boxplot(deNovo~data_annot$hla_mismatch,col=COLOR,main="deNovo Clones by HLA mismatch")
 dev.off()
 
+
+
+##############################
+### cDNA longitudinal data ###
+##############################
+
+data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+
+### longitudinal
+data_qc_cDNA_long<-data_qc_cDNA[which(data_qc_cDNA$clin!="AR" & data_qc_cDNA$clin!="pre-AR"),]
+reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
+reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$reads_cDNA>100),]
+
+id<-match(data_qc_cDNA_long$specimen_label,reads_clones_annot_Long_qc$specimen_id)
+data_qc_cDNA_long_qc<-data_qc_cDNA_long[which(is.na(id)==F),]
+data_qc_cDNA_long_qc$specimen_label<-factor(data_qc_cDNA_long_qc$specimen_label)
+
+###Delete the samples that do not have two time points
+
+###
+data_qc_cDNA_long_qc<-data_qc_cDNA_long_qc[which(data_qc_cDNA_long_qc$specimen_label!="7_S31"),]
+data_qc_cDNA_long_qc2<-data_qc_cDNA_long_qc[which(data_qc_cDNA_long_qc$specimen_label!="7_S63"),]
+
+##38021
+data_qc_cDNA_long_qc3<-data_qc_cDNA_long_qc2[which(data_qc_cDNA_long_qc2$sample_id!="1005" & data_qc_cDNA_long_qc2$sample_id!="303010"
+                                                   & data_qc_cDNA_long_qc2$sample_id!="38020"),]
+
+data_qc_cDNA_long_clean<-data_qc_cDNA_long_qc3
+
+##Obtain deNovo number of clones
+sample_id<-unique(data_qc_cDNA_long_clean$sample_id)
+deNovo<-NULL
+expansion<-NULL
+for (i in 1:length(sample_id)){
+  print(i)
+  clone_type_matrix<-as.data.frame.matrix(table(data_qc_cDNA_long_clean$V_J_lenghCDR3_Clone_igh[which(data_qc_cDNA_long_clean$sample_id==sample_id[i])],
+                                                factor(data_qc_cDNA_long_clean$specimen_label[which(data_qc_cDNA_long_clean$sample_id==sample_id[i])])))
+  clone_type_matrix$deNovo<-ifelse(clone_type_matrix[,1] == 0 & (clone_type_matrix[,2] !=0),1,0)
+  clone_type_matrix$expansion<-ifelse(clone_type_matrix[,1] > 0 & clone_type_matrix[,2] >0,1,0)
+  deNovo[i]<-sum(clone_type_matrix$deNovo)
+  expansion[i]<-sum(clone_type_matrix$expansion)
+}
+names(deNovo)<-sample_id
+names(expansion)<-sample_id
+
+
+###Read the clean annotated data
+annot<-read.csv("/Users/Pinedasans/VDJ/Data/Annot_clean_long_gDNA.csv")
+data_annot<-annot[match(names(deNovo),annot$Sample_id),c(1,2,4,6:24)]
+
+#clin deNovo
+summary(glm(deNovo~data_annot$clin))
+anova(lm(deNovo~data_annot$clin))
+tiff("boxplot_deNovo_clin_cDNA.tiff",h=2000,w=1800,res=300)
+boxplot(deNovo~data_annot$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="deNovo Clones by Clin")
+dev.off()
+
+#clin expansion
+summary(glm(expansion~data_annot$clin))
+anova(lm(expansion~data_annot$clin))
+tiff("boxplot_expansion_clin_cDNA.tiff",h=2000,w=1800,res=300)
+boxplot(expansion~data_annot$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Expansion Clones by Clin")
+dev.off()
