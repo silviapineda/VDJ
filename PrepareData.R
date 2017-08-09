@@ -80,6 +80,9 @@ data_qc_order$SHM_freq<-data_qc_order$SHM/data_qc_order$Vlength
 ##count the CDR3 length
 data_qc_order$CDR3_length<-nchar(as.character(data_qc_order$cdr3_seq))
 
+##count the read length
+data_qc_order$read_length<-nchar(as.character(data_qc_order$trimmed_sequence))
+
 ##Read counts and clones per sample and data point
 read_count <- table(data_qc_order$specimen_label)
 read_count_amplification <- table(data_qc_order$specimen_label,data_qc_order$amplification_template)
