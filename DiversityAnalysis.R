@@ -427,6 +427,17 @@ fm_null <- lmer(diversity_long_gDNA$ ~ clin + time + (time | Sample_id),data=div
 fm_full <- lmer(diversity_long_gDNA$entropy_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA,REML = F)
 anova(fm_full, fm_null) 
 
+##SHM
+fm_null <- lmer(diversity_long_gDNA$SHM_gDNA ~ clin + time + (time | Sample_id),data=diversity_long_gDNA,REML = F)
+fm_full <- lmer(diversity_long_gDNA$SHM_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA,REML = F)
+anova(fm_full, fm_null) 
+tiff("Plot_int2_SHM_gDNA.tiff",h=1000,w=1500,res=300)
+eff_df <- data.frame(Effect(c("clin", "time"), fm_full))
+ggplot(eff_df,aes(time,fit,group=clin),size=1.5) +
+  geom_line(aes(time,fit,group=clin,colour=clin),size=1.5)+
+  geom_ribbon(aes(time,ymin=lower,ymax=upper),alpha=0.3) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))
+dev.off()
 
 #################################
 ###Considering other variables##
@@ -514,19 +525,19 @@ dev.off()
 
 
 ###Association with clin stratified by immunosupression
-tiff("boxplot_clones_gDNA_Clin_by_immuno.tiff",h=2000,w=1800,res=300)
+tiff("boxplot_CDR3_gDNA_Clin_by_immuno.tiff",h=2000,w=1800,res=300)
 p1 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==0),], 
             aes(factor(diversity_long_gDNA$immunosuppression[which(diversity_long_gDNA$time2==0)]), 
-                diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==0)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 0",x="Immunosuppression", y = "Clones")
+                diversity_long_gDNA$mean_CDR3_length_gDNA[which(diversity_long_gDNA$time2==0)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 0",x="Immunosuppression", y = "mean_CDR3_length")
 p2 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==6),], 
             aes(factor(diversity_long_gDNA$immunosuppression[which(diversity_long_gDNA$time2==6)]), 
-                diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==6)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 6",x="Immunosuppression", y = "Clones")
+                diversity_long_gDNA$mean_CDR3_length_gDNA[which(diversity_long_gDNA$time2==6)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 6",x="Immunosuppression", y = "mean_CDR3_length")
 p3 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==24),], 
             aes(factor(diversity_long_gDNA$immunosuppression[which(diversity_long_gDNA$time2==24)]), 
-                diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==24)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 24",x="Immunosuppression", y = "Clones")
+              diversity_long_gDNA$mean_CDR3_length_gDNA[which(diversity_long_gDNA$time2==24)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))  + labs(title="time 24",x="Immunosuppression", y = "mean_CDR3_length")
 multiplot(p1,p2,p3)
 dev.off()
 
@@ -599,6 +610,15 @@ clones.effects <- allEffects(fm_full)
 plot(clones.effects, ylab="Clones", rug=FALSE)
 dev.off()
 
+#CDR3-length
+fm_null <- lmer(mean_CDR3_length_gDNA ~ clin + time + immunosuppression +time*clin + clin*immunosuppression +time*immunosuppression + (time | Sample_id),data=diversity_long_gDNA,REML = F)
+fm_full <- lmer(mean_CDR3_length_gDNA ~  clin*time*immunosuppression + (time | Sample_id),data=diversity_long_gDNA,REML = F)
+anova(fm_full, fm_null) 
+
+tiff("Plot_int_CDR3_clin_immuno_time_gDNA.tiff",h=1600,w=2700,res=300)
+clones.effects <- allEffects(fm_full)
+plot(clones.effects, ylab="Clones", rug=FALSE)
+dev.off()
 
 
 ########
@@ -804,60 +824,69 @@ dev.off()
 
 
 
-###########
-### AR  ###
-###########
+################
+### AR  gDNA ###
+################
 diversity_AR<-diversity[which(diversity$clin=="AR" | diversity$clin=="pre-AR"),]
 diversity_AR_gDNA<-diversity_AR[which(diversity_AR$reads_gDNA>=100),]
 diversity_AR_gDNA$clin<-relevel(diversity_AR_gDNA$clin,ref="pre-AR")
 
 ##Number of clones
+tiff("plot_summary_clones_AR_gDNA.tiff",h=2500,w=2300,res=300)
 ggplot(diversity_AR_gDNA, aes(clin, clones_gDNA,group=Sample_id)) +
   geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
   labs(x = "clin", y = "Clones")
+dev.off()
 
 ##Entropy
+tiff("plot_summary_entropy_AR_gDNA.tiff",h=2500,w=2300,res=300)
 ggplot(diversity_AR_gDNA, aes(clin, entropy_gDNA,group=Sample_id)) +
   geom_point() + geom_line(color="firebrick3") + facet_grid(~Sample_id) + 
   labs(x = "clin", y = "Entropy")
+dev.off()
+
+
 
 ##################################
 #####Analysis by time and clin ##
 ##################################
-tiff("plot_violin_entropy_est_AR_gDNA.tiff",h=2000,w=1800,res=300)
-ggplot(diversity_AR_gDNA, aes(clin,entropy_est_gDNA,fill=clin)) + 
-  geom_violin(trim=FALSE) + scale_fill_manual(values=c("goldenrod","firebrick3")) +
-  stat_summary(fun.data=mean_sdl, geom="pointrange") + labs(x="Clin", y = "Clones")
+tiff("boxplot_clones_AR_gDNA.tiff",h=2000,w=1800,res=300)
+ggplot(diversity_AR_gDNA, aes(clin,clones_gDNA,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Clones")
 dev.off()
-summary(glm(diversity_AR_gDNA$entropy_est_gDNA ~ diversity_AR_gDNA$clin))
+summary(glm(diversity_AR_gDNA$entropy_gDNA ~ diversity_AR_gDNA$clin))
+
+tiff("boxplot_clones_gDNA_Clin_by_immuno_AR.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(diversity_AR_gDNA,aes(factor(diversity_AR_gDNA$immunosuppression),
+                                  diversity_AR_gDNA$clones_gDNA,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Clones")
+print(p1)
+dev.off()
+summary(glm(diversity_AR_gDNA$clones_gDNA ~ diversity_AR_gDNA$clin*diversity_AR_gDNA$immunosuppression))
+
+tiff("boxplot_entropy_gDNA_Clin_by_immuno_AR.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(diversity_AR_gDNA,aes(factor(diversity_AR_gDNA$immunosuppression),
+                                  diversity_AR_gDNA$entropy_gDNA,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Entropy")
+print(p1)
+dev.off()
+summary(glm(diversity_AR_gDNA$entropy_gDNA ~ diversity_AR_gDNA$clin*diversity_AR_gDNA$immunosuppression))
 
 
-##Fitting a longitudinal model 
-##Clones
-fm_null <- lmer(diversity_AR_gDNA$entropy_est_gDNA~ 1 + (1 | Sample_id),data=diversity_AR_gDNA)
-fm_full <- lmer(diversity_AR_gDNA$entropy_est_gDNA ~  clin + (1 | Sample_id) ,data=diversity_AR_gDNA)
-anova(fm_null,fm_full)
-
-tiff("plot_lmer_entropy_AR_gDNA.tiff",h=1700,w=2000,res=300)
-p <- ggplot(fm_full, aes(x = clin, y = diversity_AR_gDNA$entropy_est_gDNA, colour = clin)) +
-  scale_colour_manual(values=c("goldenrod","firebrick3")) +
-  geom_point(size=3) +
-  geom_line(aes(group = Sample_id),size=0.7,color="black") 
-print(p)
+tiff("boxplot_SHM_gDNA_Clin_by_immuno_AR.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(diversity_AR_gDNA,aes(factor(diversity_AR_gDNA$immunosuppression),
+                                  diversity_AR_gDNA$SHM_gDNA,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "SHM")
+print(p1)
 dev.off()
 
-tiff("Plot_lmer2_entropy_AR_gDNA.tiff",h=1700,w=2000,res=300)
-fill<-c("goldenrod","firebrick3")
-plot(Effect(c("clin"), fm_full))
+
+tiff("boxplot_CDR3_gDNA_Clin_by_immuno_AR.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(diversity_AR_gDNA,aes(factor(diversity_AR_gDNA$immunosuppression),
+                                  diversity_AR_gDNA$mean_CDR3_length_gDNA,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "mean_CDR3_length")
+print(p1)
 dev.off()
-
-
-
-
-
-
-
-
 
 
 
