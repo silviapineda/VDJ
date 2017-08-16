@@ -61,12 +61,17 @@ vertex_gini<-NULL
 cluster_max<-NULL
 cluster_gini<-NULL
 num_reads_max_cluster<-NULL
+clusters<-NULL
 j<-1
+specimen<-unique(data_qc_gDNA_long_qc$specimen_label)
 for (i in specimen){
+  assign(paste("edges",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_gDNA/edges",i,".txt",sep=""),header=T))
+  assign(paste("vertex",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/vertex",i,".txt",sep=""),header=T))
   vertex_max[j]<-max(get(paste("vertex",i,sep=""))$Freq)
   vertex_gini[j]<-Gini(get(paste("vertex",i,sep=""))$Freq)
   cluster_max[j]<-max(table(get(paste("edges",i,sep=""))$igh_clone_id))
-  num_reads_max_cluster[j]<-as.numeric(names(tail(table(table(get(paste("edges",i,sep=""))$igh_clone_id)),1)))
+  clusters[j]<-sum(table(table(get(paste("edges",i,sep=""))$igh_clone_id)))
+  num_reads_max_cluster[j]<-tail(table(table(get(paste("edges",i,sep=""))$igh_clone_id)),1)
   cluster_gini[j]<-Gini(table(get(paste("edges",i,sep=""))$igh_clone_id))
   j=j+1
 }
@@ -77,6 +82,7 @@ reads_clones_annot_Long_qc$vertex_gini[id]<-vertex_gini
 reads_clones_annot_Long_qc$vertex_max[id]<-vertex_max
 reads_clones_annot_Long_qc$cluster_max[id]<-cluster_max
 reads_clones_annot_Long_qc$num_reads_max_cluster[id]<-num_reads_max_cluster
+reads_clones_annot_Long_qc$clusters[id]<-clusters
 reads_clones_annot_Long_qc$clonal_expansion<-(reads_clones_annot_Long_qc$num_reads_max_cluster/reads_clones_annot_Long_qc$reads_gDNA)*100
 
 reads_clones_annot_Long_qc$clin<-factor(reads_clones_annot_Long_qc$clin)
@@ -88,27 +94,27 @@ reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_c
 reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==32,24)
 
 
-tiff("plot_vertex_gini_cluster_gini_gDNA.tiff",h=2000,w=1800,res=300)
+tiff("plot_vertex_gini_cluster_gini_gDNA_1by1.tiff",h=2000,w=1800,res=300)
 reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),]
 p1<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time0, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 0")
 
 reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),]
 p2<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time6, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 6")
 
 reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),]
 p3<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time24, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 24")
 multiplot(p1,p2,p3)
 dev.off()
 
 anova(lm(cluster_gini~reads_clones_annot_Long_qc$clin))
 tiff("boxplot_vertexGini_clin_gDNA.tiff",h=2000,w=1800,res=300)
-boxplot(reads_clones_annot_Long_qc$clonal_expansion~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
+boxplot(reads_clones_annot_Long_qc$clusters~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
 dev.off()
 
 
@@ -134,6 +140,31 @@ dev.off()
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==0)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]))
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==6)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]))
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==24)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]))
+
+
+tiff("boxplot_cluster_gini_gDNA.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==0)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 0",x="Clin", y = "Cluster Gini")
+p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 6",x="Clin", y = "Cluster Gini")
+p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 24",x="Clin", y = "Cluster Gini")
+multiplot(p1,p2,p3)
+dev.off()
+
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==0)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]))
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]))
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]))
+
 
 
 ###Once is in network format I plot the network
@@ -286,6 +317,55 @@ for (i in specimen){
   write.table(vertex,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_AR_gDNA//vertex",i,".txt",sep=""),sep="\t",row.names = F)
 }
 
+##Obtain the vertex and cluster Gini index
+vertex_max<-NULL
+vertex_gini<-NULL
+cluster_max<-NULL
+cluster_gini<-NULL
+num_reads_max_cluster<-NULL
+clusters<-NULL
+j<-1
+specimen<-unique(data_qc_gDNA_AR_qc$specimen_label)
+for (i in specimen){
+  assign(paste("edges",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/AR_gDNA/edges",i,".txt",sep=""),header=T))
+  assign(paste("vertex",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_AR_gDNA/vertex",i,".txt",sep=""),header=T))
+  vertex_max[j]<-max(get(paste("vertex",i,sep=""))$Freq)
+  vertex_gini[j]<-Gini(get(paste("vertex",i,sep=""))$Freq)
+  cluster_max[j]<-max(table(get(paste("edges",i,sep=""))$igh_clone_id))
+  clusters[j]<-sum(table(table(get(paste("edges",i,sep=""))$igh_clone_id)))
+  num_reads_max_cluster[j]<-tail(table(table(get(paste("edges",i,sep=""))$igh_clone_id)),1)
+  cluster_gini[j]<-Gini(table(get(paste("edges",i,sep=""))$igh_clone_id))
+  j=j+1
+}
+
+id<-match(specimen, reads_clones_annot_AR_qc$specimen_id)
+reads_clones_annot_AR_qc$cluster_gini[id]<-cluster_gini
+reads_clones_annot_AR_qc$vertex_gini[id]<-vertex_gini
+reads_clones_annot_AR_qc$vertex_max[id]<-vertex_max
+reads_clones_annot_AR_qc$cluster_max[id]<-cluster_max
+reads_clones_annot_AR_qc$num_reads_max_cluster[id]<-num_reads_max_cluster
+reads_clones_annot_AR_qc$clusters[id]<-clusters
+reads_clones_annot_AR_qc$clonal_expansion<-(reads_clones_annot_AR_qc$num_reads_max_cluster/reads_clones_annot_AR_qc$reads_gDNA)*100
+
+reads_clones_annot_AR_qc$clin<-factor(reads_clones_annot_AR_qc$clin)
+reads_clones_annot_AR_qc$clin<-relevel(reads_clones_annot_AR_qc$clin,ref="pre-AR")
+
+tiff("plot_vertex_gini_cluster_gini_AR_gDNA.tiff",h=2000,w=1800,res=300)
+qplot(cluster_gini, vertex_gini, data= reads_clones_annot_AR_qc, colour = clin) +
+  scale_colour_manual(values=c("goldenrod","firebrick3"))
+dev.off()
+
+tiff("boxplot_vertex_gini_AR_gDNA.tiff",h=2000,w=1800,res=300)
+ggplot(reads_clones_annot_AR_qc, aes(clin,vertex_gini,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Vertex Gini")
+dev.off()
+summary(glm(reads_clones_annot_AR_qc$vertex_gini ~ reads_clones_annot_AR_qc$clin))
+
+tiff("boxplot_cluster_gini_AR_gDNA.tiff",h=2000,w=1800,res=300)
+ggplot(reads_clones_annot_AR_qc, aes(clin,cluster_gini,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Cluster Gini")
+dev.off()
+summary(glm(reads_clones_annot_AR_qc$cluster_gini ~ reads_clones_annot_AR_qc$clin))
 
 ###Once is in network format I plot the network
 ##NP
@@ -358,37 +438,37 @@ for (i in specimen){
   write.table(vertex,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_cDNA/vertex",i,".txt",sep=""),sep="\t",row.names = F)
 }
 
-## To obtain the vertex and cluster Gini index
-specimen<-unique(data_qc_cDNA_long_qc$specimen_label)
-for(i in specimen) {
-  assign(paste("edges",i,sep=""),read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_cDNA/edges",i,".txt",sep = "")))
-  assign(paste("vertex",i,sep=""),read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_cDNA/vertex",i,".txt",sep = "")))
-  assign(paste("edges_plot",i,sep=""),read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_cDNA/edges",i,".txt.outcome.txt",sep = "")))
-}
-  
 
+##Obtain the vertex and cluster Gini index
 vertex_max<-NULL
 vertex_gini<-NULL
 cluster_max<-NULL
 cluster_gini<-NULL
 num_reads_max_cluster<-NULL
+clusters<-NULL
 j<-1
+specimen<-unique(data_qc_cDNA_long_qc$specimen_label)
 for (i in specimen){
+  assign(paste("edges",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_cDNA/edges",i,".txt",sep=""),header=T))
+  assign(paste("vertex",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_cDNA/vertex",i,".txt",sep=""),header=T))
   vertex_max[j]<-max(get(paste("vertex",i,sep=""))$Freq)
   vertex_gini[j]<-Gini(get(paste("vertex",i,sep=""))$Freq)
   cluster_max[j]<-max(table(get(paste("edges",i,sep=""))$igh_clone_id))
+  clusters[j]<-sum(table(table(get(paste("edges",i,sep=""))$igh_clone_id)))
   num_reads_max_cluster[j]<-tail(table(table(get(paste("edges",i,sep=""))$igh_clone_id)),1)
   cluster_gini[j]<-Gini(table(get(paste("edges",i,sep=""))$igh_clone_id))
   j=j+1
 }
 
+ 
 id<-match(specimen, reads_clones_annot_Long_qc$specimen_id)
 reads_clones_annot_Long_qc$cluster_gini[id]<-cluster_gini
 reads_clones_annot_Long_qc$vertex_gini[id]<-vertex_gini
 reads_clones_annot_Long_qc$vertex_max[id]<-vertex_max
 reads_clones_annot_Long_qc$cluster_max[id]<-cluster_max
 reads_clones_annot_Long_qc$num_reads_max_cluster[id]<-num_reads_max_cluster
-#reads_clones_annot_Long_qc$clonal_expansion<-(reads_clones_annot_Long_qc$num_reads_max_cluster/reads_clones_annot_Long_qc$reads_gDNA)*100
+reads_clones_annot_Long_qc$clusters[id]<-clusters
+reads_clones_annot_Long_qc$clonal_expansion<-(reads_clones_annot_Long_qc$num_reads_max_cluster/reads_clones_annot_Long_qc$reads_cDNA)*100
 
 reads_clones_annot_Long_qc$clin<-factor(reads_clones_annot_Long_qc$clin)
 
@@ -398,32 +478,34 @@ qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc, colour = clin
 reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==12,6)
 reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==32,24)
 
+###Delete the one year old kid at time 6
+reads_clones_annot_Long_qc<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$specimen_id!="7_S66"),]
 
-tiff("plot_vertex_gini_cluster_gini_gDNA.tiff",h=2000,w=1800,res=300)
+tiff("plot_vertex_gini_cluster_gini_cDNA.tiff",h=2000,w=1800,res=300)
 reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),]
 p1<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time0, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 0")
 
 reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),]
 p2<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time6, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 6")
 
 reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),]
 p3<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time24, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,0.1))
+  scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 24")
 multiplot(p1,p2,p3)
 dev.off()
 
-anova(lm(cluster_gini~reads_clones_annot_Long_qc$clin))
-tiff("boxplot_vertexGini_clin_gDNA.tiff",h=2000,w=1800,res=300)
-boxplot(reads_clones_annot_Long_qc$vertex_gini~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
+anova(lm(reads_clones_annot_Long_qc$cluster_gini~reads_clones_annot_Long_qc$clin))
+tiff("boxplot_vertexGini_clin_cDNA.tiff",h=2000,w=1800,res=300)
+boxplot(reads_clones_annot_Long_qc$clusters~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
 dev.off()
 
 
-tiff("boxplot_vertex_gini_gDNA.tiff",h=2000,w=1800,res=300)
+tiff("boxplot_vertex_gini_cDNA.tiff",h=2000,w=1800,res=300)
 p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),], 
             aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]), 
                 reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==0)],fill=clin)) + 
@@ -445,6 +527,31 @@ dev.off()
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==0)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]))
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==6)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]))
 summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==24)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]))
+
+
+tiff("boxplot_cluster_gini_cDNA.tiff",h=2000,w=1800,res=300)
+p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==0)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 0",x="Clin", y = "Cluster Gini")
+p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 6",x="Clin", y = "Cluster Gini")
+p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)],fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 24",x="Clin", y = "Cluster Gini")
+multiplot(p1,p2,p3)
+dev.off()
+
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==0)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]))
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]))
+summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]))
+
 
 ###Once is in network format I plot the network
 
@@ -498,6 +605,93 @@ for(i in files) {
   plot(net,vertex.label=NA,edge.curved=0.1,layout=layout_with_graphopt(net))
   dev.off()
 }
+
+##############
+### AR #######
+#############
+data_qc_cDNA_AR<-data_qc_cDNA[which(data_qc_cDNA$clin=="AR" | data_qc_cDNA$clin=="pre-AR"),]
+reads_clones_annot_AR<-reads_clones_annot[which(reads_clones_annot$clin=="AR" | reads_clones_annot$clin=="pre-AR"),]
+reads_clones_annot_AR_qc<-reads_clones_annot_AR[which(reads_clones_annot_AR$reads_cDNA>100),]
+
+id<-match(data_qc_cDNA_AR$specimen_label,reads_clones_annot_AR_qc$specimen_id)
+data_qc_cDNA_AR_qc<-data_qc_cDNA_AR[which(is.na(id)==F),]
+data_qc_cDNA_AR_qc$specimen_label<-factor(data_qc_cDNA_AR_qc$specimen_label)
+
+data_qc_cDNA_AR_qc$clone_CDR3<-paste(data_qc_cDNA_AR_qc$igh_clone_id, data_qc_cDNA_AR_qc$cdr3_seq_aa_q,sep="")
+
+
+###Save to apply the nucleotides-assembly-1.0.jar made by Mikel
+specimen<-unique(data_qc_cDNA_AR_qc$specimen_label)
+for (i in specimen){
+  print(i)
+  data_qc_cDNA_AR_qc_specimen<-data_qc_cDNA_AR_qc[which(data_qc_cDNA_AR_qc$specimen_label==i),]
+  df_specimen<-data_qc_cDNA_AR_qc_specimen[,c("clone_CDR3","igh_clone_id")]
+  groups <- group_by(df_specimen,clone_CDR3,igh_clone_id)
+  edges<-unique(data.frame(groups))
+  vertex<-data.frame(table(data_qc_cDNA_AR_qc_specimen$clone_CDR3))
+  write.table(edges,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/AR_cDNA/edges",i,".txt",sep=""),sep="\t",row.names = F)
+  write.table(vertex,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_AR_cDNA//vertex",i,".txt",sep=""),sep="\t",row.names = F)
+}
+
+##Obtain the vertex and cluster Gini index
+vertex_max<-NULL
+vertex_gini<-NULL
+cluster_max<-NULL
+cluster_gini<-NULL
+num_reads_max_cluster<-NULL
+clusters<-NULL
+j<-1
+specimen<-unique(data_qc_cDNA_AR_qc$specimen_label)
+for (i in specimen){
+  assign(paste("edges",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/AR_cDNA/edges",i,".txt",sep=""),header=T))
+  assign(paste("vertex",i,sep=""),read.table(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_AR_cDNA/vertex",i,".txt",sep=""),header=T))
+  vertex_max[j]<-max(get(paste("vertex",i,sep=""))$Freq)
+  vertex_gini[j]<-Gini(get(paste("vertex",i,sep=""))$Freq)
+  cluster_max[j]<-max(table(get(paste("edges",i,sep=""))$igh_clone_id))
+  clusters[j]<-sum(table(table(get(paste("edges",i,sep=""))$igh_clone_id)))
+  num_reads_max_cluster[j]<-tail(table(table(get(paste("edges",i,sep=""))$igh_clone_id)),1)
+  cluster_gini[j]<-Gini(table(get(paste("edges",i,sep=""))$igh_clone_id))
+  j=j+1
+}
+
+id<-match(specimen, reads_clones_annot_AR_qc$specimen_id)
+reads_clones_annot_AR_qc$cluster_gini[id]<-cluster_gini
+reads_clones_annot_AR_qc$vertex_gini[id]<-vertex_gini
+reads_clones_annot_AR_qc$vertex_max[id]<-vertex_max
+reads_clones_annot_AR_qc$cluster_max[id]<-cluster_max
+reads_clones_annot_AR_qc$num_reads_max_cluster[id]<-num_reads_max_cluster
+reads_clones_annot_AR_qc$clusters[id]<-clusters
+reads_clones_annot_AR_qc$clonal_expansion<-(reads_clones_annot_AR_qc$num_reads_max_cluster/reads_clones_annot_AR_qc$reads_cDNA)*100
+
+reads_clones_annot_AR_qc$clin<-factor(reads_clones_annot_AR_qc$clin)
+reads_clones_annot_AR_qc$clin<-relevel(reads_clones_annot_AR_qc$clin,ref="pre-AR")
+
+tiff("plot_vertex_gini_cluster_gini_AR_cDNA.tiff",h=2000,w=1800,res=300)
+qplot(cluster_gini, vertex_gini, data= reads_clones_annot_AR_qc, colour = clin) +
+  scale_colour_manual(values=c("goldenrod","firebrick3"))
+dev.off()
+
+tiff("boxplot_vertex_gini_AR_cDNA.tiff",h=2000,w=1800,res=300)
+ggplot(reads_clones_annot_AR_qc, aes(clin,vertex_gini,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Vertex Gini")
+dev.off()
+summary(glm(reads_clones_annot_AR_qc$vertex_gini ~ reads_clones_annot_AR_qc$clin))
+
+tiff("boxplot_cluster_gini_AR_cDNA.tiff",h=2000,w=1800,res=300)
+ggplot(reads_clones_annot_AR_qc, aes(clin,cluster_gini,fill=clin)) + 
+  geom_boxplot() + scale_fill_manual(values=c("goldenrod","firebrick3")) + labs(x="Clin", y = "Cluster Gini")
+dev.off()
+summary(glm(reads_clones_annot_AR_qc$cluster_gini ~ reads_clones_annot_AR_qc$clin))
+
+
+
+
+
+
+
+
+
+
 
 
 
