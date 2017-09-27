@@ -16,6 +16,8 @@ print(x)
 ############################################################################################
 
 library(ggplot2)
+setwd("/Users/Pinedasans/VDJ/Results/")
+load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
 ##############################
 ### gDNA longitudinal data ###
@@ -58,6 +60,7 @@ for (i in 1:length(sample_id)){
   print(i)
   clone_type_matrix<-as.data.frame.matrix(table(data_qc_gDNA_long_clean$V_J_lenghCDR3_Clone_igh[which(data_qc_gDNA_long_clean$sample_id==sample_id[i])],
                                       factor(data_qc_gDNA_long_clean$specimen_label[which(data_qc_gDNA_long_clean$sample_id==sample_id[i])])))
+  
   clone_type_matrix$deNovo<-ifelse(clone_type_matrix[,1] == 0 & (clone_type_matrix[,2] !=0 | clone_type_matrix[,3] !=0),1,0)
   clone_type_matrix$persistance24<-ifelse(clone_type_matrix[,1] > 0 & clone_type_matrix[,2] > 0 & clone_type_matrix[,3] >0,1,0)
   clone_type_matrix$deNovo6<-ifelse(clone_type_matrix[,1] == 0 & clone_type_matrix[,2] !=0,1,0)
@@ -74,7 +77,23 @@ for (i in 1:length(sample_id)){
 results<-cbind(deNovo,deNovo6,deNovo24,persistance,persistance6,persistance24)
 rownames(results)<-sample_id
 results<-data.frame(results)
+write.table(results,"results_deNovo.txt")
 
+##Modified in excel
+results_deNovoPersistence<-read.table("results_deNovoPersistence.txt",header=T)
+cols<-c("chartreuse4", "dodgerblue3","darkorange2")[results$clin]
+
+tiff("deNovo_area_gDNA.tiff",h=1000,w=1000,res=300)
+ggplot(results_deNovoPersistence, aes(x=time,y=deNovo,group=sample,fill=sample)) +
+  scale_x_continuous(breaks = c(0,6,24)) + geom_area(aes(fill=sample), fill = c(cols,cols,cols)) + theme(legend.position="none") + 
+  labs(x = "time", y = "Clonal deNovo") 
+dev.off()
+
+tiff("persistence_area_gDNA.tiff",h=1000,w=1000,res=300)
+ggplot(results_deNovoPersistence, aes(x=time,y=persistance,group=sample,fill=sample)) +
+  scale_x_continuous(breaks = c(0,6,24)) + geom_area(aes(fill=sample), fill = c(cols,cols,cols)) + theme(legend.position="none") + 
+  labs(x = "time", y = "Clonal Persistence") 
+dev.off()
 
 ###Read the clean annotated data
 annot<-read.csv("/Users/Pinedasans/VDJ/Data/Annot_clean_long_gDNA.csv")

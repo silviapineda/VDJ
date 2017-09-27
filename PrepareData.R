@@ -127,3 +127,11 @@ reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh_cdr3length)
 write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
 data_qc<-data_qc_order
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
+
+
+####downsampling
+
+
+
+
+

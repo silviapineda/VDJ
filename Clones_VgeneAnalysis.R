@@ -44,72 +44,6 @@ data_qc_gDNA_long_qc$specimen_label<-factor(data_qc_gDNA_long_qc$specimen_label)
 
 data_qc_gDNA_long_qc$clone_CDR3<-paste(data_qc_gDNA_long_qc$igh_clone_id, data_qc_gDNA_long_qc$cdr3_seq_aa_q,sep="")
 
-###Save to apply the nucleotides-assembly-1.0.jar made by Mikel
-specimen<-unique(data_qc_gDNA_long_qc$specimen_label)
-for (i in specimen){
-  print(i)
-  data_qc_gDNA_long_qc_specimen<-data_qc_gDNA_long_qc[which(data_qc_gDNA_long_qc$specimen_label==i),]
-  assign(paste("vertex",i,sep=""),data.frame(table(data_qc_gDNA_long_qc_specimen$clone_CDR3)))
-  edges<-data.frame(table(data_qc_gDNA_long_qc_specimen$clone_CDR3,data_qc_gDNA_long_qc_specimen$igh_clone_id))
-  edges<-edges[which(edges$Freq==1),]
-  xx<-which(table(edges$Var2)>1)
-  id<-match(edges$Var2,names(xx))
-  edges<-edges[which(is.na(id)==F),]
-  #write.table(edges,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/edges",i,".txt",sep=""),sep="\t",row.names = F)
-}
-
-###Once is in network format I plot the network
-
-##NP
-files <- list.files("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/NP/")
-for(i in files) {
-  cat(i, "\n")
-  edges <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/NP/",i, sep = ""))
-  j<-substr(i,6,10)
-  nodes<-get(paste("vertex",j,sep=""))
-  net<-graph_from_data_frame(d=edges,vertices = nodes,directed=T)
-  V(net)$size <- V(net)$Freq/4
-  V(net)$color <- c("chartreuse4")
-  net <- simplify(net, remove.multiple = F, remove.loops = T) 
-  E(net)$arrow.mode <- 0
-  tiff(paste("/Users/Pinedasans/VDJ/Results/Network/network_",j,".tiff",sep=""),res=300,h=1500,w=1500)
-  plot(net,vertex.label=NA,edge.curved=0.1,layout=layout_with_graphopt(net))
-  dev.off()
-}
-#PNR
-files <- list.files("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/PNR/")
-for(i in files) {
-  cat(i, "\n")
-  edges <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/PNR/",i, sep = ""))
-  j<-substr(i,6,10)
-  nodes<-get(paste("vertex",j,sep=""))
-  net<-graph_from_data_frame(d=edges,vertices = nodes,directed=T)
-  V(net)$size <- V(net)$Freq/4
-  V(net)$color <- c("dodgerblue3")
-  net <- simplify(net, remove.multiple = F, remove.loops = T) 
-  E(net)$arrow.mode <- 0
-  tiff(paste("/Users/Pinedasans/VDJ/Results/Network/network_",j,".tiff",sep=""),res=300,h=1500,w=1500)
-  plot(net,vertex.label=NA,edge.curved=0.1,layout=layout_with_graphopt(net))
-  dev.off()
-}
-
-##PR
-files <- list.files("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/PR/")
-for(i in files) {
-  cat(i, "\n")
-  edges <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/PR/",i, sep = ""))
-  j<-substr(i,6,10)
-  nodes<-get(paste("vertex",j,sep=""))
-  net<-graph_from_data_frame(d=edges,vertices = nodes,directed=T)
-  V(net)$size <- V(net)$Freq/4
-  V(net)$color <- c("darkorange2")
-  net <- simplify(net, remove.multiple = F, remove.loops = T) 
-  E(net)$arrow.mode <- 0
-  tiff(paste("/Users/Pinedasans/VDJ/Results/Network/network_",j,".tiff",sep=""),res=300,h=1500,w=1500)
-  plot(net,vertex.label=NA,edge.curved=0.1,layout=layout_with_graphopt(net))
-  dev.off()
-}
-
 ###To obtain the clonal persistant 
 clone_df<-data.frame(table(data_qc_gDNA_long_qc$igh_clone_id,data_qc_gDNA_long_qc$specimen_label))
 colnames(clone_df)<-c("clone","specimen","count")
@@ -120,7 +54,7 @@ clone_df$sample = reads_clones_annot_Long_qc[clone_df$specimen,2]
 clone_df_noceros = clone_df[which(clone_df$count!=0),]
 
 
-g1<-ggplot(clone_df_noceros[which(clone_df_noceros$clin=="NP"),], aes(x=time,y=count,group=clone,fill=clone)) +
+g1<-ggplot(clone_df[which(clone_df$clin=="NP"),], aes(x=time,y=count,group=clone,fill=clone)) +
   scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
   facet_grid(clin ~ sample) + labs(x = "time", y = "Clonal persistant")
 
