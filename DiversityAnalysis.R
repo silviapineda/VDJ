@@ -26,6 +26,47 @@ library("RColorBrewer")
 setwd("/Users/Pinedasans/VDJ/Results/")
 load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
+#########
+## Calculate demographics
+########
+
+reads_clones_annot_reads100<-reads_clones_annot[which(reads_clones_annot$total_reads>100),]
+reads_clones_annot_reads100_long<-reads_clones_annot_reads100[which(reads_clones_annot_reads100$clin!="pre-AR" & reads_clones_annot_reads100$clin!="AR"),]
+reads_clones_annot_reads100_AR<-reads_clones_annot_reads100[which(reads_clones_annot_reads100$clin=="pre-AR" | reads_clones_annot_reads100$clin=="AR"),]
+
+reads_clones_annot_subjects<-rbind(reads_clones_annot_reads100_long[!duplicated(reads_clones_annot_reads100_long$Sample_id),],
+                                   reads_clones_annot_reads100_AR[!duplicated(reads_clones_annot_reads100_AR$Sample_id),])
+
+dim(reads_clones_annot_subjects)
+table(reads_clones_annot_subjects$clin)
+
+##Donor Age
+summary(reads_clones_annot_subjects$Donor.Age)
+summary(reads_clones_annot_subjects$Donor.Age[which(reads_clones_annot_subjects$clin=="NP")])
+summary(reads_clones_annot_subjects$Donor.Age[which(reads_clones_annot_subjects$clin=="PNR")])
+summary(reads_clones_annot_subjects$Donor.Age[which(reads_clones_annot_subjects$clin=="PR")])
+summary(reads_clones_annot_subjects$Donor.Age[which(reads_clones_annot_subjects$clin=="pre-AR" | reads_clones_annot_subjects$clin=="AR")])
+
+fit = lm(reads_clones_annot_subjects$Donor.Age ~ reads_clones_annot_subjects$clin)
+anova(fit)
+
+##Recipient Age
+summary(reads_clones_annot_subjects$Recipient.Age.when.had.Tx)
+summary(reads_clones_annot_subjects$Recipient.Age.when.had.Tx[which(reads_clones_annot_subjects$clin=="NP")])
+summary(reads_clones_annot_subjects$Recipient.Age.when.had.Tx[which(reads_clones_annot_subjects$clin=="PNR")])
+summary(reads_clones_annot_subjects$Recipient.Age.when.had.Tx[which(reads_clones_annot_subjects$clin=="PR")])
+summary(reads_clones_annot_subjects$Recipient.Age.when.had.Tx[which(reads_clones_annot_subjects$clin=="pre-AR" | reads_clones_annot_subjects$clin=="AR")])
+
+fit = lm(reads_clones_annot_subjects$Recipient.Age.when.had.Tx ~ reads_clones_annot_subjects$clin)
+anova(fit)
+
+
+##table time by outcome
+table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_gDNA!=0)],reads_clones_annot_reads100$time[which(reads_clones_annot_reads100$reads_gDNA!=0)])
+table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_cDNA!=0)],reads_clones_annot_reads100$time[which(reads_clones_annot_reads100$reads_cDNA!=0)])
+
+
+
 ####################################################
 ### Compare same individuals from gDNA and cDNA ###
 ###################################################
@@ -200,14 +241,16 @@ dev.off()
 ##Entropy
 g1<-ggplot(diversity_long_gDNA[1:24,], aes(time, entropy_gDNA)) + scale_y_continuous(limit = c(6,12)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Entropy")
 g2<-ggplot(diversity_long_gDNA[25:48,], aes(time, entropy_gDNA)) + geom_point() + scale_y_continuous(limit = c(6,12)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Entropy")
 g3<-ggplot(diversity_long_gDNA[49:69,], aes(time, entropy_gDNA)) + geom_point() + scale_y_continuous(limit = c(6,12)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Entropy")
+tiff("plot_summary_entropy_gDNA.tiff",h=2500,w=2300,res=300)
 multiplot(g1, g2, g3, rows=3)
+dev.off()
 
 ##Simpson
 g1<-ggplot(diversity_long_gDNA[1:24,], aes(time, simpson_gDNA)) + scale_y_continuous(limit = c(0,0.03)) + 
@@ -273,6 +316,7 @@ p3 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==24),],
 
 multiplot(p1,p2,p3)
 dev.off()
+summary(glm(diversity_long_gDNA$entropy_gDNA[which(diversity_long_gDNA$time2==0)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]))
 summary(glm(diversity_long_gDNA$entropy_gDNA[which(diversity_long_gDNA$time2==6)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]))
 summary(glm(diversity_long_gDNA$entropy_gDNA[which(diversity_long_gDNA$time2==24)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]))
 
