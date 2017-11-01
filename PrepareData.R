@@ -126,10 +126,34 @@ id.sample <- match(rownames(reads_clones_igh_cdr3length),clin_annot$specimen_id)
 reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh_cdr3length)
 write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
 data_qc<-data_qc_order
+write.csv(reads_clones_annot,"reads_clones_annotation.csv")
+reads_clones_annot<-read.csv("reads_clones_annotation.csv")
+rownames(reads_clones_annot)<-reads_clones_annot$X
+reads_clones_annot<-reads_clones_annot[,-1]
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
 
-####downsampling
+#### prepare downsampling data in cDNA ####
+load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
+reads_clones_annot_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+reads_clones_annot_cDNA<-reads_clones_annot[which(reads_clones_annot$reads_cDNA>100),]
+minread<-min(reads_clones_annot_cDNA$reads_cDNA) #62173
+data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+
+specimen<-reads_clones_annot_cDNA$specimen_id
+clones_igh<-matrix(NA,103,10)
+for ( j in 1:10){
+  data_qc_cDNA_downsampling<-NULL
+  for(i in 1:length(specimen)){
+    print(i)
+    data_qc_cDNA_specimen<-data_qc_cDNA[which(data_qc_cDNA$specimen_label==specimen[i]),]
+    data_qc_cDNA_downsampling<-rbind(data_qc_cDNA_downsampling,data_qc_cDNA_specimen[sample(minread),])
+  }
+
+  read_count_ighClones<- unique(data_qc_cDNA_downsampling[,c("specimen_label","V_J_lenghCDR3_Clone_igh")])
+  clones_igh[,j]<-data.matrix(table(read_count_ighClones$specimen_label))
+}
+
 
 
 
