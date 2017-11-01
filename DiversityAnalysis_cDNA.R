@@ -40,8 +40,6 @@ load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 ##########
 data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
 
-
-
 ########################################
 ####  Statistical Analysis  ############
 #######################################
@@ -97,13 +95,13 @@ p1<-ggplot(data=diversity_long_cDNA, aes(x=time, y=clones_cDNA, group=Sample_id,
 ##Number of clones
 g1<-ggplot(diversity_long_cDNA[1:18,], aes(time, clones_cDNA)) + scale_y_continuous(limit = c(0,80000)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Clones")
 g2<-ggplot(diversity_long_cDNA[19:38,], aes(time, clones_cDNA)) + geom_point() + scale_y_continuous(limit = c(0,80000)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Clones")
 g3<-ggplot(diversity_long_cDNA[39:55,], aes(time, clones_cDNA)) + geom_point() +  scale_y_continuous(limit = c(0,80000)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Clones")
 
 tiff("plot_summary_clones_cDNA.tiff",h=2500,w=2300,res=300)
 multiplot(g1, g2, g3, rows=3)
@@ -112,13 +110,13 @@ dev.off()
 ##Entropy
 g1<-ggplot(diversity_long_cDNA[1:18,], aes(time, entropy_cDNA)) + scale_y_continuous(limit = c(7,15)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_point() + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Entropy")
 g2<-ggplot(diversity_long_cDNA[19:38,], aes(time, entropy_cDNA)) + geom_point() + scale_y_continuous(limit = c(7,15)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Entropy")
 g3<-ggplot(diversity_long_cDNA[39:55,], aes(time, entropy_cDNA)) + geom_point() + scale_y_continuous(limit = c(7,15)) + 
   scale_x_continuous(breaks = c(0,6,12,24,32)) + facet_grid(clin ~ Sample_id) + 
-  geom_smooth(method = "lm",se = F, colour = "steelblue", size = 1)+ labs(x = "time", y = "Clones")
+  geom_smooth(method = "lm",se = F, colour = "darkseagreen", size = 1)+ labs(x = "time", y = "Entropy")
 tiff("plot_summary_entropy_cDNA.tiff",h=2500,w=2300,res=300)
 multiplot(g1, g2, g3, rows=3)
 dev.off()
@@ -284,6 +282,26 @@ ggplot(eff_df,aes(time,fit,group=clin),size=1.5) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))
 dev.off()
 
+#####################
+#####Considering the number of clones by downsampling
+####################
+clones_down<-read.csv("/Users/Pinedasans/VDJ/Data/clones_igh.downsampling.csv")
+clones_down$mean<-apply(clones_down[,2:11],1,mean)
+id<-match(diversity_long_cDNA_noOutlier$specimen_id,clones_down$X)
+diversity_long_cDNA_noOutlier$clones_cDNA_down<-clones_down$mean[id]
+  
+##Clones
+fm_null <- lmer(diversity_long_cDNA_noOutlier$clones_cDNA_down ~ clin + time + (time | Sample_id),data=diversity_long_cDNA_noOutlier,REML = F)
+fm_full <- lmer(diversity_long_cDNA_noOutlier$clones_cDNA_down ~  clin*time + (time | Sample_id) ,data=diversity_long_cDNA_noOutlier,REML = F)
+anova(fm_full, fm_null) 
+
+tiff("Plot_int2_clones_downsampling_cDNA.tiff",h=1000,w=1500,res=300)
+eff_df <- data.frame(Effect(c("clin", "time"), fm_full))
+ggplot(eff_df,aes(time,fit,group=clin),size=1.5) +
+  geom_line(aes(time,fit,group=clin,colour=clin),size=1.5)+
+  geom_ribbon(aes(time,ymin=lower,ymax=upper),alpha=0.3) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))
+dev.off()
 
 
 #################################
