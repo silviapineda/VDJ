@@ -103,9 +103,9 @@ colnames(clones_igh)<-c("clones_cDNA","clones_gDNA")
 reads_clones_igh<-cbind(reads,clones_igh)
 
 #####SHM
-sum_SHM<-aggregate(data_qc_order$SHM, by=list(data_qc_order$specimen_label,data_qc_order$amplification_template), FUN=sum)
-sum_SHM_gDNA<-sum_SHM[which(sum_SHM$Group.2=="gDNA"),]
-sum_SHM_cDNA<-sum_SHM[which(sum_SHM$Group.2=="cDNA"),]
+sum_SHM_freq<-aggregate(data_qc_order$SHM_freq, by=list(data_qc_order$specimen_label,data_qc_order$amplification_template), FUN=sum)
+sum_SHM_gDNA<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="gDNA"),]
+sum_SHM_cDNA<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="cDNA"),]
 id_gDNA<-match(rownames(reads_clones_igh),sum_SHM_gDNA$Group.1)
 id_cDNA<-match(rownames(reads_clones_igh),sum_SHM_cDNA$Group.1)
 reads_clones_igh_SHM<-cbind(reads_clones_igh,sum_SHM_gDNA$x[id_gDNA],sum_SHM_cDNA$x[id_cDNA])
@@ -124,13 +124,15 @@ colnames(reads_clones_igh_cdr3length)[14:15]<-c("mean_CDR3_length_gDNA","mean_CD
 ###To obtain the overlapping samples between clinical annotation and data
 id.sample <- match(rownames(reads_clones_igh_cdr3length),clin_annot$specimen_id)
 reads_clones_annot <- cbind(clin_annot[id.sample,], reads_clones_igh_cdr3length)
-write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
+#write.csv(reads_clones_annot, "/Users/Pinedasans/VDJ/Data/total_reads_clones.csv", row.names = F)
 data_qc<-data_qc_order
 write.csv(reads_clones_annot,"reads_clones_annotation.csv")
-reads_clones_annot<-read.csv("reads_clones_annotation.csv")
-rownames(reads_clones_annot)<-reads_clones_annot$X
-reads_clones_annot<-reads_clones_annot[,-1]
+
+##Read the annotation file with the new subject_id
+reads_clones_annot<-read.csv("/Users/Pinedasans/VDJ/Data/reads_clones_annotation.csv")
+
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
+
 
 
 #### prepare downsampling data in cDNA ####

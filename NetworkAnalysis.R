@@ -19,7 +19,7 @@ library("igraph")
 library("ineq")
 library("dplyr")
 
-setwd("/Users/Pinedasans/VDJ/Results/")
+setwd("/Users/Pinedasans/VDJ/SummaryResults/network/")
 load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
 
@@ -41,7 +41,45 @@ data_qc_gDNA_long_qc$specimen_label<-factor(data_qc_gDNA_long_qc$specimen_label)
 
 data_qc_gDNA_long_qc$clone_CDR3<-paste(data_qc_gDNA_long_qc$igh_clone_id, data_qc_gDNA_long_qc$cdr3_seq_aa_q,sep="")
 
-###Save to apply the nucleotides-assembly-1.0.jar made by Mikel
+###########################################
+###### To study the persistances clones ###
+##The vertex are the BCRs and the frequency of each one
+##The edges shows how many are forming a clone
+##Example: Number of BCRs in 7_S01 is 795 (vertex) and number of edges is 6. 795-6 = 789 number of clones
+
+##First: obtain the number of vertex
+specimen<-unique(data_qc_gDNA_long_qc$specimen_label)
+for (i in specimen){
+  print(i)
+  data_qc_gDNA_long_qc_specimen<-data_qc_gDNA_long_qc[which(data_qc_gDNA_long_qc$specimen_label==i),]
+  df_specimen<-data_qc_gDNA_long_qc_specimen[,c("clone_CDR3","igh_clone_id")]
+  groups <- group_by(df_specimen,clone_CDR3,igh_clone_id)
+  #edges<-unique(data.frame(groups))
+  assign(paste("vertex",i,sep=""),data.frame(table(data_qc_gDNA_long_qc_specimen$clone_CDR3)))
+}
+
+##Second: Obtain if there are BCR's (vertex) share across time
+sample<-unique(data_qc_gDNA_long_qc$sample_id)
+#filter by the ones who has three time points to study the persistance
+sample_filter<-sample[-c(3,5,6,7,11,16,17,26)]
+persistance<-list()
+j=1
+for (i in sample_filter){
+  print(i)
+  specimen<-reads_clones_annot_Long_qc$specimen_id[which(reads_clones_annot_Long_qc$Sample_id==i)]
+  #persistance[[j]]<-intersect(intersect(get(paste("vertex",specimen[1],sep=""))[,1],get(paste("vertex",specimen[2],sep=""))[,1]),get(paste("vertex",specimen[3],sep=""))[,1]) #No persistance clones across 3 time points
+  #persistance[[j]]<-intersect(get(paste("vertex",specimen[1],sep=""))[,1],get(paste("vertex",specimen[2],sep=""))[,1]) #Persistance from time 0 to time 24
+  persistance[[j]]<-intersect(get(paste("vertex",specimen[2],sep=""))[,1],get(paste("vertex",specimen[3],sep=""))[,1]) #Persistance from time 6 to 24
+  j=j+1
+}
+sample_subject_ID<-read.csv("/Users/Pinedasans/VDJ/Data/Sample_subject_ID.csv")
+subject<-sample_subject_ID[match(sample_filter,sample_subject_ID$Sample_id),]
+names(persistance)<-subject$subject_id
+
+
+
+
+###Obtain vertex and edges to apply the nucleotides-assembly-1.0.jar made by Mikel
 specimen<-unique(data_qc_gDNA_long_qc$specimen_label)
 for (i in specimen){
   print(i)
@@ -51,7 +89,7 @@ for (i in specimen){
   edges<-unique(data.frame(groups))
   vertex<-data.frame(table(data_qc_gDNA_long_qc_specimen$clone_CDR3))
   write.table(edges,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/long_gDNA/edges",i,".txt",sep=""),sep="\t",row.names = F)
-  write.table(vertex,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA//vertex",i,".txt",sep=""),sep="\t",row.names = F)
+  write.table(vertex,paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/vertex",i,".txt",sep=""),sep="\t",row.names = F)
 }
 
 
@@ -173,8 +211,8 @@ specimen_NP<- c("7_S01", "7_S02", "7_S03", "7_S04", "7_S05", "7_S06", "7_S07", "
                 "7_S14", "7_S17", "7_S18", "7_S21", "7_S22", "7_S23", "7_S24", "7_S25", "7_S26", "7_S27",
                 "7_S28", "7_S29", "7_S30")
 specimen_PNR<-c("7_S32", "7_S33", "7_S34", "7_S35", "7_S36", "7_S37", "7_S38", "7_S39", "7_S40", "7_S41", "7_S42",
-                "7_S46", "7_S47", "7_S48" ,"7_S50" , "7_S51", "7_S53", "7_S54", "7_S55", "7_S56", "7_S57", "7_S58",
-                "7_S59", "7_S60")
+                "7_S46", "7_S47", "7_S48" ,"7_S50" , "7_S51", "7_S53", "7_S54", "7_S55", "7_S56", "7_S57","7_S58","7_S59", "7_S60")
+
 specimen_PR<-c("7_S61", "7_S62", "7_S63", "7_S64", "7_S65", "7_S66", "7_S67", "7_S68", "7_S69", "7_S70", "7_S71", "7_S72",
                "7_S73", "7_S74", "7_S75", "7_S76", "7_S77", "7_S78", "7_S79", "7_S82", "7_S83")
 
@@ -192,7 +230,7 @@ for(i in specimen_NP) {
   plot(net,vertex.label=NA,layout=layout_with_graphopt(net))
   dev.off()
 }
-
+specimen_PNR<-c("7_S58","7_S59", "7_S60")
 for(i in specimen_PNR) {
   edges <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/edges",i,".txt.outcome.txt",sep = ""))
   vertex <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/vertex",i, ".txt",sep = ""))
@@ -207,6 +245,7 @@ for(i in specimen_PNR) {
   plot(net,vertex.label=NA,layout=layout_with_graphopt(net))
   dev.off()
 }
+
 
 for(i in specimen_PR) {
   edges <- read.delim(paste("/Users/Pinedasans/VDJ/Data/reads_by_sample/network_long_gDNA/edges",i,".txt.outcome.txt",sep = ""))
