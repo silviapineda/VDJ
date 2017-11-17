@@ -18,6 +18,7 @@ library(ggplot2)
 library("igraph")
 library("ineq")
 library("dplyr")
+library(lme4)
 
 setwd("/Users/Pinedasans/VDJ/SummaryResults/network/")
 load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
@@ -125,28 +126,37 @@ reads_clones_annot_Long_qc$clonal_expansion<-(reads_clones_annot_Long_qc$num_rea
 
 reads_clones_annot_Long_qc$clin<-factor(reads_clones_annot_Long_qc$clin)
 
-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc, colour = clin) +
-  scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2"))
+###Delete sample 8 form the analysis
+reads_clones_annot_Long_qc<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$subject_id.1!="sample8_6" & reads_clones_annot_Long_qc$subject_id.1!="sample8_24"),]
+                                                                             
 
-reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==12,6)
-reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==32,24)
-
+tiff("plot_vertex_gini_cluster_gini_gDNA.tiff",h=1600,w=2000,res=300)
+reads_clones_annot_Long_qc$timeplot<-ifelse(reads_clones_annot_Long_qc$time2==0,1,
+                               ifelse(reads_clones_annot_Long_qc$time2==6,1.5,2))
+COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
+cols = COLOR[reads_clones_annot_Long_qc$clin]
+plot(cluster_gini, vertex_gini,cex=reads_clones_annot_Long_qc$timeplot,
+        col = cols,pch=20,ylab = "Vextex Gini",xlab = "Cluster Gini")
+legend("topleft",legend=c("NP","PNR","PR","t0","t6","t24"), 
+       col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
+       pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
+dev.off()
 
 tiff("plot_vertex_gini_cluster_gini_gDNA_1by1.tiff",h=2000,w=1800,res=300)
-reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),]
+reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==0),]
 p1<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time0, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 0")
+  scale_x_continuous(limit = c(0,0.1)) + scale_y_continuous(limit = c(0,0.6)) + labs(title="time 0")
 
-reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),]
+reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==6),]
 p2<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time6, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 6")
+  scale_x_continuous(limit = c(0,0.1)) + scale_y_continuous(limit = c(0,0.6)) + labs(title="time 6")
 
-reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),]
+reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==24),]
 p3<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time24, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
-  scale_x_continuous(limit = c(0,1)) + scale_y_continuous(limit = c(0,1)) + labs(title="time 24")
+  scale_x_continuous(limit = c(0,0.1)) + scale_y_continuous(limit = c(0,0.6)) + labs(title="time 24")
 multiplot(p1,p2,p3)
 dev.off()
 
@@ -155,21 +165,26 @@ tiff("boxplot_vertexGini_clin_gDNA.tiff",h=2000,w=1800,res=300)
 boxplot(reads_clones_annot_Long_qc$clusters~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
 dev.off()
 
+anova(lm(vertex_gini~reads_clones_annot_Long_qc$clin))
+tiff("boxplot_vertexGini_clin_gDNA.tiff",h=2000,w=1800,res=300)
+boxplot(reads_clones_annot_Long_qc$vertex_gini~reads_clones_annot_Long_qc$clin,col=c("chartreuse4", "dodgerblue3","darkorange2"),main="Degree of clonal expansion")
+dev.off()
+
 
 tiff("boxplot_vertex_gini_gDNA.tiff",h=2000,w=1800,res=300)
-p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]), 
-                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==0)],fill=clin)) + 
+p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==0),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==0)]), 
+                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time2==0)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 0",x="Clin", y = "Vertex Gini")
-p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]), 
-                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==6)],fill=clin)) + 
+p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==6),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==6)]), 
+                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time2==6)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 6",x="Clin", y = "Vertex Gini")
-p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]), 
-                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time==24)],fill=clin)) + 
+p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==24),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==24)]), 
+                reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long_qc$time2==24)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 24",x="Clin", y = "Vertex Gini")
 multiplot(p1,p2,p3)
@@ -181,19 +196,19 @@ summary(glm(reads_clones_annot_Long_qc$vertex_gini[which(reads_clones_annot_Long
 
 
 tiff("boxplot_cluster_gini_gDNA.tiff",h=2000,w=1800,res=300)
-p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==0)]), 
-                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==0)],fill=clin)) + 
+p1 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==0),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==0)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time2==0)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 0",x="Clin", y = "Cluster Gini")
-p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]), 
-                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)],fill=clin)) + 
+p2 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==6),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==6)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time2==6)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 6",x="Clin", y = "Cluster Gini")
-p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),], 
-            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]), 
-                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)],fill=clin)) + 
+p3 = ggplot(reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==24),], 
+            aes(factor(reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time2==24)]), 
+                reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time2==24)],fill=clin)) + 
   geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
   labs(title="time 24",x="Clin", y = "Cluster Gini")
 multiplot(p1,p2,p3)
@@ -203,7 +218,34 @@ summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Lon
 summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==6)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==6)]))
 summary(glm(reads_clones_annot_Long_qc$cluster_gini[which(reads_clones_annot_Long_qc$time==24)] ~ reads_clones_annot_Long_qc$clin[which(reads_clones_annot_Long_qc$time==24)]))
 
+##Gini
+fm_null <- lmer(reads_clones_annot_Long_qc$cluster_gini ~ clin + time + (time | Sample_id),data=reads_clones_annot_Long_qc,REML = F)
+fm_full <- lmer(reads_clones_annot_Long_qc$cluster_gini ~  clin*time + (time | Sample_id) ,data=reads_clones_annot_Long_qc,REML = F)
+anova(fm_full, fm_null) 
 
+tiff("plot_lmer_clusterGini_gDNA.tiff",h=1700,w=2000,res=300)
+p <- ggplot(fm_full, aes(x = time, y = reads_clones_annot_Long_qc$cluster_gini, colour = clin)) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  geom_point(size=3) +
+  geom_smooth(method="lm",size=1.5) +
+  labs(x = "time (months)",y = "Clones") 
+
+print(p)
+dev.off()
+
+fm_null <- lmer(reads_clones_annot_Long_qc$vertex_gini ~ clin + time + (time | Sample_id),data=reads_clones_annot_Long_qc,REML = F)
+fm_full <- lmer(reads_clones_annot_Long_qc$vertex_gini ~  clin*time + (time | Sample_id) ,data=reads_clones_annot_Long_qc,REML = F)
+anova(fm_full, fm_null) 
+
+tiff("plot_lmer_vertexGini_gDNA.tiff",h=1700,w=2000,res=300)
+p <- ggplot(fm_full, aes(x = time, y = reads_clones_annot_Long_qc$vertex_gini, colour = clin)) +
+  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+  geom_point(size=3) +
+  geom_smooth(method="lm",size=1.5) +
+  labs(x = "time (months)",y = "Clones") 
+
+print(p)
+dev.off()
 
 ###Once is in network format I plot the network
 ##NP
@@ -449,12 +491,13 @@ for(i in specimen_AR) {
 ############
 ### cDNA ###
 ############
+
 data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
 
 ### longitudinal
 data_qc_cDNA_long<-data_qc_cDNA[which(data_qc_cDNA$clin!="AR" & data_qc_cDNA$clin!="pre-AR"),]
 reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
-reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$reads_cDNA>100),]
+reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$clones_cDNA>1000),]
 
 id<-match(data_qc_cDNA_long$specimen_label,reads_clones_annot_Long_qc$specimen_id)
 data_qc_cDNA_long_qc<-data_qc_cDNA_long[which(is.na(id)==F),]
@@ -511,27 +554,31 @@ reads_clones_annot_Long_qc$clonal_expansion<-(reads_clones_annot_Long_qc$num_rea
 
 reads_clones_annot_Long_qc$clin<-factor(reads_clones_annot_Long_qc$clin)
 
-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc, colour = clin) +
-  scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2"))
+tiff("plot_vertex_gini_cluster_gini_gDNA.tiff",h=1600,w=2000,res=300)
+reads_clones_annot_Long_qc$timeplot<-ifelse(reads_clones_annot_Long_qc$time2==0,1,
+                                            ifelse(reads_clones_annot_Long_qc$time2==6,1.5,2))
+COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
+cols = COLOR[reads_clones_annot_Long_qc$clin]
+plot(cluster_gini, vertex_gini,cex=reads_clones_annot_Long_qc$timeplot,
+     col = cols,pch=20,ylab = "Vextex Gini",xlab = "Cluster Gini")
+legend("topleft",legend=c("NP","PNR","PR","t0","t6","t24"), 
+       col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
+       pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
+dev.off()
 
-reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==12,6)
-reads_clones_annot_Long_qc$time<-replace(reads_clones_annot_Long_qc$time,reads_clones_annot_Long_qc$time==32,24)
-
-###Delete the one year old kid at time 6
-reads_clones_annot_Long_qc<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$specimen_id!="7_S66"),]
 
 tiff("plot_vertex_gini_cluster_gini_cDNA.tiff",h=2000,w=1800,res=300)
-reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==0),]
+reads_clones_annot_Long_qc_time0<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==0),]
 p1<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time0, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
   scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 0")
 
-reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==6),]
+reads_clones_annot_Long_qc_time6<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==6),]
 p2<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time6, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
   scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 6")
 
-reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time==24),]
+reads_clones_annot_Long_qc_time24<-reads_clones_annot_Long_qc[which(reads_clones_annot_Long_qc$time2==24),]
 p3<-qplot(cluster_gini, vertex_gini, data= reads_clones_annot_Long_qc_time24, colour = clin) +
   scale_colour_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
   scale_x_continuous(limit = c(0,0.25)) + scale_y_continuous(limit = c(0,0.75)) + labs(title="time 24")
