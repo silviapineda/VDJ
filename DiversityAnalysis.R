@@ -43,6 +43,17 @@ reads_clones_annot_subjects<-rbind(reads_clones_annot_reads100_long[!duplicated(
 dim(reads_clones_annot_subjects)
 table(reads_clones_annot_subjects$clin)
 
+##CADI score
+summary(reads_clones_annot_subjects$cadi)
+summary(reads_clones_annot_subjects$cadi[which(reads_clones_annot_subjects$clin=="NP")])
+summary(reads_clones_annot_subjects$cadi[which(reads_clones_annot_subjects$clin=="PNR")])
+summary(reads_clones_annot_subjects$cadi[which(reads_clones_annot_subjects$clin=="PR")])
+summary(reads_clones_annot_subjects$cadi[which(reads_clones_annot_subjects$clin=="pre-AR" | reads_clones_annot_subjects$clin=="AR")])
+
+fit = lm(reads_clones_annot_subjects$cadi ~ reads_clones_annot_subjects$clin)
+anova(fit)
+
+
 ##Donor Age
 summary(reads_clones_annot_subjects$Donor.Age)
 summary(reads_clones_annot_subjects$Donor.Age[which(reads_clones_annot_subjects$clin=="NP")])
@@ -446,6 +457,7 @@ dev.off()
 summary(glm(diversity_long_gDNA_sample8$entropy_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]))
 summary(glm(diversity_long_gDNA_sample8$entropy_gDNA[which(diversity_long_gDNA_sample8$time2==6)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]))
 summary(glm(diversity_long_gDNA_sample8$entropy_gDNA[which(diversity_long_gDNA_sample8$time2==24)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]))
+
 
 ###What happened if we adjust for the other covariates?
 summary(glm(diversity_long_gDNA_sample8$entropy_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]+
