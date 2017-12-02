@@ -65,34 +65,9 @@ vusage_filter<-vusage2[which(vgenes2$time==0 | vgenes2$time==6 | vgenes2$time==2
 ###FIlTERING
 ###Convert into 0 all those who has a low expression (<0.002)
 xx<-replace(vusage_filter,vusage_filter<0.002,0)
-xx[,which(apply(xx,2,function(x) sum(x==0))<=62)]
 ###Those who are in lesss than 10%
 vusage_filter<-vusage_filter[,which(apply(xx,2,function(x) sum(x==0))<=58)]
 ##47 genes in total
-
-
-###Heatmap with all the sample
-
-annotation_col = data.frame(
-  sample = factor(vgenes_filter$Sample_id),
-  time = as.factor(vgenes_filter$time),
-  clin = vgenes_filter$clin)
-  
-rownames(annotation_col)<-rownames(vusage_filter)
-fill=c("chartreuse4", "dodgerblue3","darkorange2")
-fill2=brewer.pal(3,"Set3")
-fill3=rainbow(26)
-ann_colors = list (clin = c(NP = fill[1], PNR = fill[2], PR = fill[3]),
-                   time = c("0" = fill2[1],"6" = fill2[2], "24" = fill2[3]),
-                   sample= c("1005" = fill3[1],"1006" = fill3[2],"12001"= fill3[3],"12004"= fill3[4],"12008"= fill3[5],"38010"= fill3[6],
-                          "38011"= fill3[7],"38012"= fill3[8],"38020"= fill3[9],"38021"=fill3[10], "41006"=fill3[11]  ,"89002"=fill3[12], "300003"=fill3[13] ,
-                            "300005"=  fill3[14], "300006"= fill3[15],"300013"= fill3[16],"300015"= fill3[17],"301002"= fill3[18],"301003"= fill3[19],
-                          "303001"= fill3[20], "303003"= fill3[21], "303005"= fill3[22], "303006"= fill3[23], "303007"= fill3[24], "303010"=fill3[25] , 
-                           "303013"= fill3[26]))
-tiff("heatmap_vgene_byclones.tiff",res=300,w=4000,h=2500)
-pheatmap(t(vusage_filter),cex=1.0,annotation_col = annotation_col,annotation_colors = ann_colors,rownames = F,color =  brewer.pal(9,"Reds"),border_color=F)
-dev.off()
-
 
 #########
 ## Statistical analysis to find significant vgenes
@@ -133,11 +108,14 @@ for(i in 1:64){
 } 
 ##Non significant results across time points
 
-
+###Rnadom Forest
 set.seed(112233)
 vusage_time<-data.frame(cbind(vusage_filter,vgenes_filter$time))
 fit<-VSURF(x = vusage_time, y=factor(vgenes_filter$clin),parallel = TRUE,ncores=4)
 vars<-data.frame(vusage_time[,fit$varselect.interp])
+###13 and 43 has very low expression, deleted
+vars<-vars[,which(colnames(vars)!="IGHV3.13" & colnames(vars)!="IGHV3.43")]
+
 set.seed(1000)
 rf_output <- randomForest(factor(vgenes_filter$clin)~.,data=vars,proximity=TRUE, keep.forest=T,ntree=1000)
 tiff("MDSplot_vgene_RF.tiff",res=300,w=2000,h=2000)
@@ -150,13 +128,21 @@ legend("topleft",legend=c("NP","PNR","PR","t0","t6","t24"),
        pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
 dev.off()
 
+
+##Heatmap with significant results
 vusage_sign<-vars
 
 splitop<-strsplit(as.character(vgenes_filter$subject_id),"_")
 subjects<-unlist(lapply(splitop, `[[`, 1))
+individuals<-c("individual1" , "individual1" , "individual1",  "individual2" , "individual2"  ,"individual3" , "individual3" , "individual4"  ,"individual4" , "individual4" , "individual5" 
+               ,"individual6" , "individual6" ,"individual7" , "individual8" , "individual9",  "individual9" , "individual9" , "individual10" ,"individual10", "individual10", "individual11" 
+               ,"individual11", "individual12" ,"individual12" ,"individual12", "individual13", "individual13" ,"individual13" ,"individual14", "individual14" ,"individual16" ,"individual16" 
+               ,"individual16" ,"individual17" ,"individual17", "individual18", "individual18", "individual19","individual19" ,"individual19" ,"individual20", "individual20", "individual20" 
+               ,"individual21" ,"individual21", "individual21", "individual22", "individual22", "individual22", "individual23" ,"individual23", "individual23", "individual24", "individual24" 
+               ,"individual24", "individual25" ,"individual25" ,"individual25" ,"individual26", "individual26" ,"individual26" ,"individual27")
 
 annotation_col = data.frame(
-  sample = factor(subjects),
+  individual = factor(individuals),
   time = as.factor(vgenes_filter$time),
   clin = vgenes_filter$clin)
 
@@ -169,11 +155,11 @@ qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 fill3 = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 ann_colors = list (clin = c("NP" = fill[1], "PNR" = fill[2], "PR" = fill[3]),
                    time = c("0" = fill2[1],"6" = fill2[2], "24" = fill2[3]),  
-                   sample= c("sample1" = fill3[1],"sample2" = fill3[2],"sample3"= fill3[3],"sample4"= fill3[4],"sample5"= fill3[5],"sample6"= fill3[6],
-                           "sample7"= fill3[7],"sample8"= fill3[8],"sample9"= fill3[9],"sample10"=fill3[10], "sample11"=fill3[11]  ,"sample12"=fill3[12], "sample13"=fill3[13] ,
-                             "sample14"=  fill3[14], "sample16"= fill3[15],"sample17"= fill3[16],"sample18"= fill3[17],"sample19"= fill3[18],"sample20"= fill3[19],
-                              "sample21"= fill3[20], "sample22"= fill3[21], "sample23"= fill3[22], "sample24"= fill3[23], "sample25"= fill3[24], "sample26"=fill3[25] , 
-                               "sample27"= fill3[26]))
+                   individual= c("individual1" = fill3[1],"individual2" = fill3[2],"individual3"= fill3[3],"individual4"= fill3[4],"individual5"= fill3[5],"individual6"= fill3[6],
+                           "individual7"= fill3[7],"individual8"= fill3[8],"individual9"= fill3[9],"individual10"=fill3[10], "individual11"=fill3[11]  ,"individual12"=fill3[12], "individual13"=fill3[13] ,
+                             "individual14"=  fill3[14], "individual16"= fill3[15],"individual17"= fill3[16],"individual18"= fill3[17],"individual19"= fill3[18],"individual20"= fill3[19],
+                              "individual21"= fill3[20], "individual22"= fill3[21], "individual23"= fill3[22], "individual24"= fill3[23], "individual25"= fill3[24], "individual26"=fill3[25] , 
+                               "individual27"= fill3[26]))
 
 
 colfunc<-colorRampPalette(c("white","red4"))
@@ -209,7 +195,7 @@ vjusage_filter<-vjusage2[which(vjgenes2$time==0 | vjgenes2$time==6 | vjgenes2$ti
 ###FIlTERING
 ###Convert into 0 all those who has a low expression (<0.002)
 xx<-replace(vjusage_filter,vjusage_filter<0.002,0)
-xx[,which(apply(xx,2,function(x) sum(x==0))<=62)]
+#xx[,which(apply(xx,2,function(x) sum(x==0))<=62)]
 ###Those who are in lesss than 10%
 vjusage_filter<-vjusage_filter[,which(apply(xx,2,function(x) sum(x==0))<=58)]
 ##213 vj junction 
@@ -243,13 +229,21 @@ legend("topleft",legend=c("NP","PNR","PR","t0","t6","t24"),
        pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
 dev.off()
 
+
+##Heatmap
 vjusage_sign<-vars
 
 splitop<-strsplit(as.character(vjgenes_filter$subject_id),"_")
 subjects<-unlist(lapply(splitop, `[[`, 1))
+individuals<-c("individual1" , "individual1" , "individual1",  "individual2" , "individual2"  ,"individual3" , "individual3" , "individual4"  ,"individual4" , "individual4" , "individual5" 
+               ,"individual6" , "individual6" ,"individual7" , "individual8" , "individual9",  "individual9" , "individual9" , "individual10" ,"individual10", "individual10", "individual11" 
+               ,"individual11", "individual12" ,"individual12" ,"individual12", "individual13", "individual13" ,"individual13" ,"individual14", "individual14" ,"individual16" ,"individual16" 
+               ,"individual16" ,"individual17" ,"individual17", "individual18", "individual18", "individual19","individual19" ,"individual19" ,"individual20", "individual20", "individual20" 
+               ,"individual21" ,"individual21", "individual21", "individual22", "individual22", "individual22", "individual23" ,"individual23", "individual23", "individual24", "individual24" 
+               ,"individual24", "individual25" ,"individual25" ,"individual25" ,"individual26", "individual26" ,"individual26" ,"individual27")
 
 annotation_col = data.frame(
-  sample = factor(subjects),
+  individual = factor(individuals),
   time = as.factor(vjgenes_filter$time),
   clin = vjgenes_filter$clin)
 
@@ -262,16 +256,18 @@ qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 fill3 = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 ann_colors = list (clin = c("NP" = fill[1], "PNR" = fill[2], "PR" = fill[3]),
                    time = c("0" = fill2[1],"6" = fill2[2], "24" = fill2[3]),  
-                   sample= c("sample1" = fill3[1],"sample2" = fill3[2],"sample3"= fill3[3],"sample4"= fill3[4],"sample5"= fill3[5],"sample6"= fill3[6],
-                             "sample7"= fill3[7],"sample8"= fill3[8],"sample9"= fill3[9],"sample10"=fill3[10], "sample11"=fill3[11]  ,"sample12"=fill3[12], "sample13"=fill3[13] ,
-                             "sample14"=  fill3[14], "sample16"= fill3[15],"sample17"= fill3[16],"sample18"= fill3[17],"sample19"= fill3[18],"sample20"= fill3[19],
-                             "sample21"= fill3[20], "sample22"= fill3[21], "sample23"= fill3[22], "sample24"= fill3[23], "sample25"= fill3[24], "sample26"=fill3[25] , 
-                             "sample27"= fill3[26]))
+                   individual= c("individual1" = fill3[1],"individual2" = fill3[2],"individual3"= fill3[3],"individual4"= fill3[4],"individual5"= fill3[5],"individual6"= fill3[6],
+                                 "individual7"= fill3[7],"individual8"= fill3[8],"individual9"= fill3[9],"individual10"=fill3[10], "individual11"=fill3[11]  ,"individual12"=fill3[12], "individual13"=fill3[13] ,
+                                 "individual14"=  fill3[14], "individual16"= fill3[15],"individual17"= fill3[16],"individual18"= fill3[17],"individual19"= fill3[18],"individual20"= fill3[19],
+                                 "individual21"= fill3[20], "individual22"= fill3[21], "individual23"= fill3[22], "individual24"= fill3[23], "individual25"= fill3[24], "individual26"=fill3[25] , 
+                                 "individual27"= fill3[26]))
 
 colfunc<-colorRampPalette(c("white","purple4"))                
 tiff("heatmap_vdjgene_RF.tiff",res=300,w=3500,h=2500)
 pheatmap(t(vjusage_sign),cex=1.0,annotation_col = annotation_col,annotation_colors = ann_colors,rownames = F,color =  colfunc(100),border_color=F)
 dev.off()
+
+
 
 ###############
 ####One circos plot with the median values for each clinical outcome
@@ -406,7 +402,7 @@ circos.par(gap.after = gap.after)
 
 grid.col<-c(colorRampPalette(brewer.pal(9,"Reds"))(length(unique(v))),
             colorRampPalette(brewer.pal(6,"Purples"))(length(unique(j))))
-names(grid.col)<-c(as.character(unique(v)),as.character(unique(j)))
+names(grid.col)<-c(rownames(vj_usage_mat_PR2), colnames(vj_usage_mat_PR2))
 
 
 tiff(paste("v_j_junction_gDNA_long_PR.tiff"),res=300,h=1800,w=1800)
@@ -447,7 +443,7 @@ circos.par(gap.after = gap.after, start.degree = -big.gap/2)
 grid.col<-c(colorRampPalette(brewer.pal(9,"Reds"))(length(unique(v))),
             colorRampPalette(brewer.pal(6,"Purples"))(length(unique(j))))
 
-names(grid.col)<-c(as.character(unique(v)),as.character(unique(j)))
+names(grid.col)<-c(rownames(vj_usage_mat_PNR2), colnames(vj_usage_mat_PNR2))
 
 tiff(paste("v_j_junction_gDNA_long_PNR.tiff"),res=300,h=1800,w=1800)
 
@@ -488,7 +484,7 @@ circos.par(gap.after = gap.after, start.degree = -big.gap/2)
 
 grid.col<-c(colorRampPalette(brewer.pal(9,"Reds"))(length(unique(v))),
             colorRampPalette(brewer.pal(6,"Purples"))(length(unique(j))))
-names(grid.col)<-c(as.character(unique(v)),as.character(unique(j)))
+names(grid.col)<-c(rownames(vj_usage_mat_NP2), colnames(vj_usage_mat_NP2))
 
 tiff(paste("v_j_junction_gDNA_long_NP.tiff"),res=300,h=1800,w=1800)
 
