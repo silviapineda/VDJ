@@ -11,7 +11,8 @@
 ###import pandas library to work with data frames
 import pandas as pd
 import numpy as np
-
+from functools import partial
+from multiprocessing import Pool
 ################################
 ######### Functions ############
 ################################
@@ -61,26 +62,31 @@ def ObtainNumberClones(ListClones):
     return df_clones
 
 
+def ProcessGroup(data_clonesInference, V_J_CDR3_unique, j):
+    print (j)
+    data_clonesInference_V_J_CDR3_unique = data_clonesInference[data_clonesInference['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
+    nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
+    ##Obtain the number of clones inferred
+    ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
+    data_clonesInference_V_J_CDR3_unique.loc[data_clonesInference_V_J_CDR3_unique.index,'CloneId'] = pd.Series(ClonesInfered['number']).values
+    data_clonesInference_V_J_CDR3_unique['CloneId'] = data_clonesInference_V_J_CDR3_unique['V_J_lenghCDR3'] + "_" + data_clonesInference_V_J_CDR3_unique['CloneId'].map(str)
+    return data_clonesInference_V_J_CDR3_unique
+
 def ProcessSample(data_clonesInference):
     result = pd.DataFrame([])
     V_J_CDR3_unique = data_clonesInference['V_J_lenghCDR3'].unique()
     ClonesInfered = 0
     ##Loop for each V_J_CDR3 unique 
-    result = data_clonesInference
-    for j in range(0,len(V_J_CDR3_unique)):
-        print (j)
-        data_clonesInference_V_J_CDR3_unique = data_clonesInference[data_clonesInference['V_J_lenghCDR3'] == V_J_CDR3_unique[j]]
-        nucleotides = list(data_clonesInference_V_J_CDR3_unique['cdr3_seq'])
-        ##Obtain the number of clones inferred
-        ClonesInfered = ObtainNumberClones(ProcessNucleotides(nucleotides))
-        result.loc[data_clonesInference_V_J_CDR3_unique.index,'numberClone'] = pd.Series(ClonesInfered['number']).values
+    pool = Pool(30)
+    partialFunction = partial(ProcessGroup, data_clonesInference, V_J_CDR3_unique)
+    result = pool.map(partialFunction, range(0,len(V_J_CDR3_unique)))
     return result
     
 ########################
 ###### Main program ####
 ########################
-
-data_clonesInference = pd.read_csv("/Users/Pinedasans/VDJ/Data/data_clonesInference.txt",sep="\t")
+print("Start")
+data_clonesInference = pd.read_csv("/home/pinedasans/VDJ/clonsInfered/data_clonesInference.txt",sep="\t")
 
 ###Obtain the unique subjects
 #sample_unique = data_clonesInference['sample_id'].unique()
@@ -94,4 +100,5 @@ final_result = ProcessSample(data_clonesInference)
 result_ClonesInfered = result_ClonesInfered.append(final_result)  
 
 ###Result    
-result_ClonesInfered.to_csv('/Users/Pinedasans/VDJ/Data/ClonesInferedAll.csv')
+result_ClonesInfered.to_csv('/home/pinedasans/VDJ/clonsInfered/ClonesInferedAll.csv')
+print("End")
