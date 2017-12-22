@@ -19,7 +19,7 @@ from multiprocessing import Pool
 
 def MatchNucleotides( a,b ):
     count = len(a)
-    threshold = len(a)*0.9
+    threshold = len(a)*0.95
     for i in range(0, len(a)):
         if(a[i]!=b[i]):
             count = count-1
