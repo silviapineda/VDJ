@@ -155,9 +155,3 @@ for ( j in 1:10){
   read_count_ighClones<- unique(data_qc_cDNA_downsampling[,c("specimen_label","V_J_lenghCDR3_Clone_igh")])
   clones_igh[,j]<-data.matrix(table(read_count_ighClones$specimen_label))
 }
-
-
-
-
-
-
