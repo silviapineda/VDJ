@@ -22,10 +22,11 @@ library("VSURF")
 library(pheatmap)
 
 setwd("/Users/Pinedasans/VDJ/SummaryResults/AllClones/")
-data<-read.csv("/Users/Pinedasans/VDJ/Data/ClonesInferedAll.csv")
-
+data<-read.csv("/Users/Pinedasans/VDJ/Data/ClonesInferedAll_90.csv")
+data$CloneId2<-paste(data$V_J_lenghCDR3,data$CloneId,sep="_")
+  
 ##Call clones from the dataset generate with all from python
-clones<- unique(data[,c("specimen_label","CloneId","amplification_template")])
+clones<- unique(data[,c("specimen_label","CloneId2","amplification_template")])
 clones_mat<-data.matrix(table(clones$specimen_label,clones$amplification_template))
 
 ###Add the two new columns to the diversity file
@@ -117,7 +118,7 @@ dev.off()
 ###############
 ####  cDNA  ###
 ##############
-diversity_cDNA_qc<-diversity_all[which(diversity_all$clones_all_cDNA>13941),]
+diversity_cDNA_qc<-diversity_all[which(diversity_all$clones_all_cDNA>100),]
 diversity_long_cDNA<-diversity_cDNA_qc[which(diversity_cDNA_qc$clin=="NP" | diversity_cDNA_qc$clin=="PNR" | diversity_cDNA_qc$clin=="PR"),]
 diversity_long_cDNA$clin<-factor(diversity_long_cDNA$clin, levels=c("NP", "PNR", "PR"))
 
@@ -201,7 +202,7 @@ data_gDNA_long_qc<-data_gDNA_long[which(is.na(id)==F),]
 data_gDNA_long_qc$specimen_label<-factor(data_gDNA_long_qc$specimen_label)
 
 ##Build the matrix with the clones by samples
-clone_type_gDNA<-t(as.data.frame(unclass(table(data_gDNA_long_qc$CloneId,factor(data_gDNA_long_qc$specimen_label)))))
+clone_type_gDNA<-t(as.data.frame(unclass(table(data_gDNA_long_qc$CloneId2,factor(data_gDNA_long_qc$specimen_label)))))
 id.spec<-match(rownames(clone_type_gDNA),diversity_long_gDNA$specimen_id)
 clone_type_gDNA<-cbind(as.character(diversity_long_gDNA$clin[id.spec]),diversity_long_gDNA$time2[id.spec],
                        diversity_long_gDNA$Sample_id[id.spec],as.character(diversity_long_gDNA$subject_id[id.spec]),clone_type_gDNA)
@@ -213,8 +214,8 @@ clone_type_gDNA_num2<-t(apply(clone_type_gDNA_num,1,as.numeric))
 colnames(clone_type_gDNA_num2)<-colnames(clone_type_gDNA[,5:ncol(clone_type_gDNA)])
 
 clone_type_gDNA_num_reduced<-clone_type_gDNA_num2[,which(colSums(clone_type_gDNA_num2)!=0)]
-##147,617 clones that at least one sample has 
-save(clone_type_gDNA_df,clone_type_gDNA_num_reduced,diversity_long_gDNA_filter,file="~/VDJ/Data/clonesInferedAll_gDNA_90.Rdata")
+##99,954 clones that at least one sample has 
+save(clone_type_gDNA_df,clone_type_gDNA_num_reduced,diversity_long_gDNA_filter,data_gDNA_long_qc,file="~/VDJ/Data/clonesInferedAll_gDNA_90.Rdata")
 
 
 ############################################
@@ -227,7 +228,7 @@ data_cDNA_long_qc<-data_cDNA_long[which(is.na(id)==F),]
 data_cDNA_long_qc$specimen_label<-factor(data_cDNA_long_qc$specimen_label)
 
 ##Build the matrix with the clones by samples
-clone_type_cDNA<-t(as.data.frame(unclass(table(data_cDNA_long_qc$CloneId,factor(data_cDNA_long_qc$specimen_label)))))
+clone_type_cDNA<-t(as.data.frame(unclass(table(data_cDNA_long_qc$CloneId2,factor(data_cDNA_long_qc$specimen_label)))))
 id.spec<-match(rownames(clone_type_cDNA),diversity_long_cDNA$specimen_id)
 clone_type_cDNA<-cbind(as.character(diversity_long_cDNA$clin[id.spec]),diversity_long_cDNA$time2[id.spec],
                        diversity_long_cDNA$Sample_id[id.spec],as.character(diversity_long_cDNA$subject_id[id.spec]),clone_type_cDNA)
@@ -266,7 +267,8 @@ for (i in 1:length(specimen)){
   }
 }
 write.csv(common,"common_90.csv",row.names = F)
-common<-read.csv("common_90.csv")
+common<-data.matrix(read.csv("common_90.csv"))
+
 colnames(common)<-specimen
 rownames(common)<-specimen
 

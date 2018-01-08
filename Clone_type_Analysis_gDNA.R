@@ -26,7 +26,7 @@ library(pheatmap)
 ### Analysis in the clone data matrix
 #################
 setwd("/Users/Pinedasans/VDJ/SummaryResults/AllClones/")
-load("~/VDJ/Data/clonesInferedAll_gDNA_95.Rdata")
+load("~/VDJ/Data/clonesInferedAll_gDNA_90.Rdata")
 clone_distribution<-colSums(clone_type_gDNA_num_reduced)
 clone_distribution[order(clone_distribution,decreasing = T)]
 
@@ -36,15 +36,13 @@ clone_distribution_filter<-clone_distribution[which(clone_distribution>1)]
 barplot(clone_distribution_filter[order(clone_distribution_filter,decreasing = T)])
 
 ###Example clone with the maximum levels
-table(data_gDNA_long_qc[grep("IGHV3-23_IGHJ4_54_5922.0",data_gDNA_long_qc$CloneId),c("clin","time")])
-table(data_gDNA_long_qc[grep("IGHV3-23_IGHJ4_54_5922.0",data_gDNA_long_qc$CloneId),"specimen_label"])
-data_gDNA_long_qc$sample_id_time<-paste(seq(1,nrow(data_gDNA_long_qc)),data_gDNA_long_qc$sample_id,data_gDNA_long_qc$time,sep="_")
-write.csv(data_gDNA_long_qc[grep("IGHV3-23_IGHJ4_54_5922.0",data_gDNA_long_qc$CloneId),c("clin", "sample_id_time","cdr3_seq_aa_q","v_gene","j_gene")],file="clone1_98.csv")
+table(data_gDNA_long_qc[grep("IGHV3-48_IGHJ4_30_3795",data_gDNA_long_qc$CloneId2),c("clin","time")])
+
 
 ####Filter the clone matrix to perform the analysis
 id<-match(names(clone_distribution_filter),colnames(clone_type_gDNA_num_reduced))
 clone_type_gDNA_num_filter<-clone_type_gDNA_num_reduced[,id]
-clone_type_gDNA_num_filter2<-clone_type_gDNA_num_filter[,colSums(clone_type_gDNA_num_filter!=0)>3] ##72 clones
+clone_type_gDNA_num_filter2<-clone_type_gDNA_num_filter[,colSums(clone_type_gDNA_num_filter!=0)>3] ##194 clones
 
 matrix_clones<-cbind(clone_type_gDNA_df[,2],clone_type_gDNA_num_filter2)
 set.seed(112233)
