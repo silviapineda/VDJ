@@ -133,6 +133,23 @@ reads_clones_annot<-read.csv("/Users/Pinedasans/VDJ/Data/reads_clones_annotation
 
 save(data_qc,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
+###save the data to call the clones by all samples
+data_qc$unique_id<-seq(1,nrow(data_qc))
+data_clonesInference<-data_qc[,c("unique_id","specimen_label","sample_id","amplification_template","isosubtype","v_segment","d_segment",
+                                 "j_segment","trimmed_sequence","replicate_label","v_sequence","d_sequence","j_sequence","igh_clone_id","cdr3_seq_aa_q","clin","time","v_gene","j_gene","d_gene","isotype",
+                                 "Vlength", "SHM",  "SHM_freq", "CDR3_length","V_J_lenghCDR3","cdr3_seq")]
+data_clonesInference<-data_clonesInference[which(nchar(data_qc$cdr3_seq)!=0),]
+write.table(data_clonesInference,file="/Users/Pinedasans/VDJ/Data/data_clonesInference.txt",row.names = F,sep="\t")
+
+
+###Merge nucleotides output with original data
+load(file="/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
+data_qc<-data_qc[which(nchar(data_qc$cdr3_seq)!=0),]
+nucleotides_output<-read.csv("/Users/Pinedasans/VDJ/Data/ClonesInferedAll_90.csv")
+nucleotides_clones_unique<-unique(nucleotides_output[,c("V_J_lenghCDR3","cdr3_seq","CloneId")])
+data_merge<-merge(data_qc,nucleotides_clones_unique,by=c("V_J_lenghCDR3","cdr3_seq"))
+save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+
 
 
 #### prepare downsampling data in cDNA ####
@@ -141,6 +158,7 @@ reads_clones_annot_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
 reads_clones_annot_cDNA<-reads_clones_annot[which(reads_clones_annot$reads_cDNA>100),]
 minread<-min(reads_clones_annot_cDNA$reads_cDNA) #62173
 data_qc_cDNA<-data_qc[which(data_qc$amplification_template=="cDNA"),]
+
 
 specimen<-reads_clones_annot_cDNA$specimen_id
 clones_igh<-matrix(NA,103,10)
