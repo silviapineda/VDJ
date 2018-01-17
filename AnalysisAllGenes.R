@@ -21,7 +21,7 @@ library("randomForest")
 library("VSURF")
 library(pheatmap)
 
-setwd("/Users/Pinedasans/VDJ/SummaryResults/AllClones/")
+setwd("/Users/Pinedasans/VDJ/ResultsAllClones/")
 data<-read.csv("/Users/Pinedasans/VDJ/Data/ClonesInferedAll_90.csv")
 data$CloneId2<-paste(data$V_J_lenghCDR3,data$CloneId,sep="_")
   
@@ -241,7 +241,7 @@ colnames(clone_type_cDNA_num2)<-colnames(clone_type_cDNA[,5:ncol(clone_type_cDNA
 
 clone_type_cDNA_num_reduced<-clone_type_cDNA_num2[,which(colSums(clone_type_cDNA_num2)!=0)]
 ##2,355,583 clones that at least one sample has 
-save(clone_type_cDNA_df,clone_type_cDNA_num_reduced,diversity_long_cDNA_filter,file="~/VDJ/Data/clonesInferedAll_cDNA_90.Rdata")
+save(clone_type_cDNA_df,clone_type_cDNA_num_reduced,diversity_long_cDNA_filter,data_cDNA_long_qc,file="~/VDJ/Data/clonesInferedAll_cDNA_90.Rdata")
 
 
 
