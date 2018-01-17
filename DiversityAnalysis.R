@@ -26,6 +26,10 @@ library("RColorBrewer")
 setwd("/Users/Pinedasans/VDJ/Results/")
 load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
 
+###Read the data with the new clone definition
+data_allsamples<-read.csv("/Users/Pinedasans/VDJ/Data/ClonesInferedAll_90.csv")
+data_allsamples$CloneId2<-paste(data_allsamples$V_J_lenghCDR3,data_allsamples$CloneId,sep="_")
+
 #########
 ## Calculate demographics
 ########
@@ -142,7 +146,7 @@ table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_c
 ##########
 ## gDNA ##
 ##########
-data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
+data_gDNA<-data[which(data$amplification_template=="gDNA"),]
 
 ###########################
 ## 2. Diversity measures###
