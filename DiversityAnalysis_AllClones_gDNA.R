@@ -139,6 +139,7 @@ table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_c
 ## gDNA ##
 ##########
 data_gDNA<-data_merge[which(data_merge$amplification_template=="gDNA"),]
+data_gDNA_long<-data_gDNA[which(data_gDNA$clin=="NP" | data_gDNA$clin=="PNR" | data_gDNA$clin=="PR"),]
 
 ###########################
 ## 2. Diversity measures###
@@ -175,8 +176,8 @@ write.csv(diversity,"/Users/Pinedasans/VDJ/Data/diversity_AllClones_gDNA.csv")
 diversity<-read.csv("/Users/Pinedasans/VDJ/Data/diversity_AllClones_gDNA.csv",header=T)
 
 reads_clones_annot_gDNA<-reads_clones_annot[which(reads_clones_annot$gDNA=="gDNA"),]
-id<-match(reads_clones_annot_gDNA$specimen_id,rownames(diversity))
-diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,])
+id<-match(reads_clones_annot_gDNA$specimen_id,diversity[,1])
+diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,-1])
 
 #############
 ### gDNA ####
@@ -393,7 +394,7 @@ p <- ggplot(fm_full, aes(x = time, y = diversity_long_gDNA_sample8$entropy, colo
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   geom_point(size=3) +
   geom_smooth(method="lm",size=1.5)+
-  labs(x = "time (months)",y = "Entropy") 
+  labs(x = "time (months)",y = "Entropy (gDNA)") 
 print(p)
 dev.off()
 
