@@ -20,8 +20,8 @@ library("ineq")
 library("dplyr")
 library(lme4)
 
-setwd("/Users/Pinedasans/VDJ/SummaryResults/AllClones/")
-load("~/VDJ/Data/Data_all_95.Rdata")
+setwd("/Users/Pinedasans/VDJ/ResultsAllClones//")
+load("~/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 
 
 ############
