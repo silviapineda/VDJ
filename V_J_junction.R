@@ -25,26 +25,27 @@ library(ggplot2)
 library(reshape2)
 
 setwd("/Users/Pinedasans/VDJ/SummaryResults/Vgene/")
-load("/Users/Pinedasans/VDJ/Data/VDJ_order.Rdata")
+load("/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 
 ############
 ### gDNA ###
 ############
-data_qc_gDNA<-data_qc[which(data_qc$amplification_template=="gDNA"),]
+data_gDNA<-data_merge[which(data_merge$amplification_template=="gDNA"),]
 ### longitudinal
-data_qc_gDNA_long<-data_qc_gDNA[which(data_qc_gDNA$clin!="AR" & data_qc_gDNA$clin!="pre-AR"),]
+data_gDNA_long<-data_gDNA[which(data_gDNA$clin!="AR" & data_gDNA$clin!="pre-AR"),]
 reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
 
 #For this analysis we are putting a cut-off on clones because v-genes can be biased at low clonality 
 reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$clones_gDNA>100),]
 
-id<-match(data_qc_gDNA_long$specimen_label,reads_clones_annot_Long_qc$specimen_id)
-data_qc_gDNA_long_qc<-data_qc_gDNA_long[which(is.na(id)==F),]
-data_qc_gDNA_long_qc$specimen_label<-factor(data_qc_gDNA_long_qc$specimen_label)
+id<-match(data_gDNA_long$specimen_label,reads_clones_annot_Long_qc$specimen_id)
+data_gDNA_long_qc<-data_gDNA_long[which(is.na(id)==F),]
+data_gDNA_long_qc$specimen_label<-factor(data_gDNA_long_qc$specimen_label)
 
-vgenes<-as.data.frame(unclass(table(data_qc_gDNA_long_qc$specimen_label,data_qc_gDNA_long_qc$v_gene)))
+vgenes<-as.data.frame(unclass(table(data_gDNA_long_qc$specimen_label,data_gDNA_long_qc$v_gene)))
 id.spec<-match(rownames(vgenes),reads_clones_annot_Long_qc$specimen_id)
-vgenes<-cbind(vgenes,reads_clones_annot_Long_qc$clin[id.spec],reads_clones_annot_Long_qc$time2[id.spec],reads_clones_annot_Long_qc$Sample_id[id.spec],reads_clones_annot_Long_qc$subject_id.1[id.spec])
+vgenes<-cbind(vgenes,reads_clones_annot_Long_qc$clin[id.spec],reads_clones_annot_Long_qc$time[id.spec],
+              reads_clones_annot_Long_qc$Sample_id[id.spec],reads_clones_annot_Long_qc$subject_id[id.spec])
 colnames(vgenes)[65:68]<-c("clin","time","Sample_id","subject_id")
 
 vusage<-matrix(NA,nrow(vgenes),(ncol(vgenes)-4))
@@ -58,6 +59,11 @@ rownames(vusage)<-vgenes$subject_id
 vgenes2<-vgenes[which(vgenes$subject_id!="sample8_6" & vgenes$subject_id!="sample8_24"),]
 vusage2<-vusage[which(vgenes$subject_id!="sample8_6" & vgenes$subject_id!="sample8_24"),]
 
+#Replace some time points
+vgenes2$time<-replace(vgenes2$time,vgenes2$time==13,24)
+vgenes2$time<-replace(vgenes2$time,vgenes2$time==12,6)
+vgenes2$time<-replace(vgenes2$time,vgenes2$time==32,24)
+
 #to delete a sample with time==9 and ==2
 vgenes_filter<-vgenes2[which(vgenes2$time==0 | vgenes2$time==6 | vgenes2$time==24),]
 vusage_filter<-vusage2[which(vgenes2$time==0 | vgenes2$time==6 | vgenes2$time==24),]
@@ -66,7 +72,7 @@ vusage_filter<-vusage2[which(vgenes2$time==0 | vgenes2$time==6 | vgenes2$time==2
 ###Convert into 0 all those who has a low expression (<0.002)
 xx<-replace(vusage_filter,vusage_filter<0.002,0)
 ###Those who are in lesss than 10%
-vusage_filter<-vusage_filter[,which(apply(xx,2,function(x) sum(x==0))<=58)]
+vusage_filter<-vusage_filter[,which(apply(xx,2,function(x) sum(x==0))<=57)]
 ##47 genes in total
 
 #########
@@ -113,12 +119,13 @@ set.seed(112233)
 vusage_time<-data.frame(cbind(vusage_filter,vgenes_filter$time))
 fit<-VSURF(x = vusage_time, y=factor(vgenes_filter$clin),parallel = TRUE,ncores=4)
 vars<-data.frame(vusage_time[,fit$varselect.interp])
+
 ###13 and 43 has very low expression, deleted
-vars<-vars[,which(colnames(vars)!="IGHV3.13" & colnames(vars)!="IGHV3.43")]
+#vars<-vars[,which(colnames(vars)!="IGHV3.13" & colnames(vars)!="IGHV3.43")]
 
 set.seed(1000)
 rf_output <- randomForest(factor(vgenes_filter$clin)~.,data=vars,proximity=TRUE, keep.forest=T,ntree=1000)
-tiff("MDSplot_vgene_RF.tiff",res=300,w=2000,h=2000)
+tiff("MDSplot_vgene_RF_gDNA.tiff",res=300,w=2000,h=2000)
 vgenes_filter$timeplot<-ifelse(vgenes_filter$time==0,1,
                                ifelse(vgenes_filter$time==6,1.5,2))
 MDSplot(rf_output, factor(vgenes_filter$clin),cex=vgenes_filter$timeplot,
@@ -163,7 +170,7 @@ ann_colors = list (clin = c("NP" = fill[1], "PNR" = fill[2], "PR" = fill[3]),
 
 
 colfunc<-colorRampPalette(c("white","red4"))
-tiff("heatmap_vgene_byclones_RF.tiff",res=300,w=3500,h=2500)
+tiff("heatmap_vgene_byclones_RF_gDNA.tiff",res=300,w=3500,h=2500)
 pheatmap(t(vusage_sign),cex=1.0,annotation_col = annotation_col,
          annotation_colors = ann_colors,rownames = F,color =  colfunc(100),border_color=F)
 dev.off()
