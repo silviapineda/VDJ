@@ -43,7 +43,7 @@ data_cDNA_long<-data_cDNA[which(data_cDNA$clin=="NP" | data_cDNA$clin=="PNR" | d
 ## 2. Diversity measures###
 ###########################
 ############
-## gDNA ### 
+## cDNA ### 
 ###########
 specimen_unique<-unique(data_cDNA$specimen_label)
 entropy_unmapped<-NULL
@@ -52,6 +52,8 @@ entropy_IGHD<-NULL
 entropy_IGHE<-NULL
 entropy_IGHG<-NULL
 entropy_IGHM<-NULL
+entropy_naive<-NULL
+entropy_memory<-NULL
 for (i in 1:length(specimen_unique)){
   print(i)
   data_specimen_unique<-data_cDNA[which(data_cDNA$specimen_label==specimen_unique[i]),]
@@ -61,18 +63,26 @@ for (i in 1:length(specimen_unique)){
   clones_specimen_IGHE<-data_specimen_unique[which(data_specimen_unique$isotype=="IGHE"),"V_J_lenghCDR3_CloneId"]
   clones_specimen_IGHG<-data_specimen_unique[which(data_specimen_unique$isotype=="IGHG"),"V_J_lenghCDR3_CloneId"]
   clones_specimen_IGHM<-data_specimen_unique[which(data_specimen_unique$isotype=="IGHM"),"V_J_lenghCDR3_CloneId"]
+  clones_specimen_naive<-data_specimen_unique[which(data_specimen_unique$IGHM_naive_memory=="naive"),"V_J_lenghCDR3_CloneId"]
+  clones_specimen_memory<-data_specimen_unique[which(data_specimen_unique$IGHM_naive_memory=="memory"),"V_J_lenghCDR3_CloneId"]
+  
   fi_unmapped<-as.numeric(table(clones_specimen_unmapped))/length(clones_specimen_unmapped)
   fi_IGHA<-as.numeric(table(clones_specimen_IGHA))/length(clones_specimen_IGHA)
   fi_IGHD<-as.numeric(table(clones_specimen_IGHD))/length(clones_specimen_IGHD)
   fi_IGHE<-as.numeric(table(clones_specimen_IGHE))/length(clones_specimen_IGHE)
   fi_IGHG<-as.numeric(table(clones_specimen_IGHG))/length(clones_specimen_IGHG)
   fi_IGHM<-as.numeric(table(clones_specimen_IGHM))/length(clones_specimen_IGHM)
+  fi_naive<-as.numeric(table(clones_specimen_naive))/length(clones_specimen_naive)
+  fi_memory<-as.numeric(table(clones_specimen_memory))/length(clones_specimen_memory)
+  
   hi_unmapped<-fi_unmapped*log2(fi_unmapped)
   hi_IGHA<-fi_IGHA*log2(fi_IGHA)
   hi_IGHD<-fi_IGHD*log2(fi_IGHD)
   hi_IGHE<-fi_IGHE*log2(fi_IGHE)
   hi_IGHG<-fi_IGHG*log2(fi_IGHG)
   hi_IGHM<-fi_IGHM*log2(fi_IGHM)
+  hi_naive<-fi_naive*log2(fi_naive)
+  hi_memory<-fi_memory*log2(fi_memory)
   
   entropy_unmapped[i]=-sum(hi_unmapped)
   entropy_IGHA[i]=-sum(hi_IGHA)
@@ -80,12 +90,16 @@ for (i in 1:length(specimen_unique)){
   entropy_IGHE[i]=-sum(hi_IGHE)
   entropy_IGHG[i]=-sum(hi_IGHG)
   entropy_IGHM[i]=-sum(hi_IGHM)
+  entropy_naive[i]=-sum(hi_naive)
+  entropy_memory[i]=-sum(hi_memory)
+  
 }
+
 #entropy_norm<-entropy/max(entropy,na.rm = T)
 #clonality<-(1-entropy_norm)
 #names(clonality)<-specimen_unique
 
-diversity<-cbind(entropy,entropy_unmapped,entropy_IGHA,entropy_IGHD,entropy_IGHE,entropy_IGHG,entropy_IGHM)
+diversity<-cbind(entropy_unmapped,entropy_IGHA,entropy_IGHD,entropy_IGHE,entropy_IGHG,entropy_IGHM,entropy_naive,entropy_memory)
 rownames(diversity)<-specimen_unique
 write.csv(diversity,"/Users/Pinedasans/VDJ/Data/diversity_AllClones_cDNA.csv")
 
@@ -148,7 +162,7 @@ for (i in c("UNMAPPED_isotypes","IGHA_isotypes","IGHD_isotypes","IGHE_isotypes",
 
 #clones
 COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
-for (i in c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHE","clones_IGHG","clones_IGHM")){
+for (i in c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHE","clones_IGHG","clones_IGHM","clones_naive","clones_memory")){
   tiff(paste0("barplot_",i,"_cDNA.tiff"),res=300,w=3000,h=2500)
   par(mfrow=c(2,1))
   #barplot(diversity_long_cDNA[which(diversity_long_cDNA$time2==0),match(i,colnames(diversity_long_cDNA))],

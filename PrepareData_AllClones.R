@@ -92,6 +92,7 @@ id_IGHM<-match(rownames(reads_clones_all),sum_SHM_IGHM$Group.1)
 reads_clones_SHM_isotypes<-cbind(sum_SHM_unmapped$x[id_unmapped],sum_SHM_IGHA$x[id_IGHA],sum_SHM_IGHD$x[id_IGHD],
                         sum_SHM_IGHE$x[id_IGHE],sum_SHM_IGHG$x[id_IGHG],sum_SHM_IGHM$x[id_IGHM])
 colnames(reads_clones_SHM_isotypes)<-c("SHM_unmapped","SHM_IGHA","SHM_IGHD","SHM_IGHE","SHM_IGHG","SHM_IGHM")
+
 ##For repliactes
 sum_SHM_freq<-aggregate(data_merge$SHM_freq, by=list(data_merge$specimen_label,data_merge$replicates_gDNA), FUN=sum)
 sum_SHM_PCR_A<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="PCR_A"),]
@@ -122,6 +123,7 @@ id_gDNA<-match(rownames(reads_clones_all),cdr3_length_gDNA$Group.1)
 id_cDNA<-match(rownames(reads_clones_all),cdr3_length_cDNA$Group.1)
 reads_clones_CDR3<-cbind(cdr3_length_gDNA$x[id_gDNA],cdr3_length_cDNA$x[id_cDNA])
 colnames(reads_clones_CDR3)<-c("CDR3_length_gDNA","CDR3_length_cDNA")
+
 ##For isotypes
 cdr3_length_freq<-aggregate(data_merge$CDR3_length, by=list(data_merge$specimen_label,data_merge$isotype), FUN=mean)
 cdr3_length_unmapped<-cdr3_length_freq[which(cdr3_length_freq$Group.2==""),]
@@ -140,6 +142,7 @@ id_IGHM<-match(rownames(reads_clones_all),cdr3_length_IGHM$Group.1)
 reads_clones_CDR3_isotypes<-cbind(cdr3_length_unmapped$x[id_unmapped],cdr3_length_IGHA$x[id_IGHA],cdr3_length_IGHD$x[id_IGHD],
                                  cdr3_length_IGHE$x[id_IGHE],cdr3_length_IGHG$x[id_IGHG],cdr3_length_IGHM$x[id_IGHM])
 colnames(reads_clones_CDR3_isotypes)<-c("CDR3_length_unmapped","CDR3_length_IGHA","CDR3_length_IGHD","CDR3_length_IGHE","CDR3_length_IGHG","CDR3_length_IGHM")
+
 ##For repliactes
 cdr3_length_freq<-aggregate(data_merge$CDR3_length, by=list(data_merge$specimen_label,data_merge$replicates_gDNA), FUN=mean)
 cdr3_length_PCR_A<-cdr3_length_freq[which(cdr3_length_freq$Group.2=="PCR_A"),]
@@ -172,6 +175,17 @@ reads_clones_annot<-read.csv("/Users/Pinedasans/VDJ/Data/total_reads_clones.csv"
 
 save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 
+### Add naive and memory B-cells clones from the IGHM isotype
+## SHM<=4 is navie SHM>=4 is memory
+data_merge$IGHM_naive_memory<-ifelse(data_merge$isotype=="IGHM" & data_merge$SHM<=4,"naive",
+                                     ifelse(data_merge$isotype=="IGHM" & data_merge$SHM>4,"memory",NA))
 
+clones_naive_memory<- unique(data_merge[,c("specimen_label","V_J_lenghCDR3_CloneId","IGHM_naive_memory")])
+clones_naive_memory_matrix<-data.matrix(table(clones_naive_memory$specimen_label,clones_naive_memory$IGHM_naive_memory))
+colnames(clones_naive_memory_matrix)<-c("clones_memory","clones_naive")
 
+id<-match(reads_clones_annot$specimen_id,rownames(clones_naive_memory_matrix))
 
+reads_clones_annot$clones_naive<-clones_naive_memory_matrix[id,1]
+reads_clones_annot$clones_memory<-clones_naive_memory_matrix[id,2]
+save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
