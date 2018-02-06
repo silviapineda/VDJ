@@ -40,17 +40,18 @@ data_gDNA_long<-data_gDNA[which(data_gDNA$clin=="NP" | data_gDNA$clin=="PNR" | d
 clone_type_gDNA<-t(as.data.frame(unclass(table(data_gDNA_long$V_J_lenghCDR3_CloneId,factor(data_gDNA_long$specimen_label)))))
 id.spec<-match(rownames(clone_type_gDNA),reads_clones_annot$specimen_id)
 clone_type_gDNA<-cbind(as.character(reads_clones_annot$clin[id.spec]),reads_clones_annot$time[id.spec],
-                       reads_clones_annot$Sample_id[id.spec],as.character(reads_clones_annot$subject_id[id.spec]),clone_type_gDNA)
-colnames(clone_type_gDNA)[1:4]<-c("clin","time","Sample_id","subject_id")
+                       as.character(reads_clones_annot$Individual.id[id.spec]),clone_type_gDNA)
+colnames(clone_type_gDNA)[1:3]<-c("clin","time","individual_id")
 clone_type_gDNA_df<-as.data.frame(clone_type_gDNA)
 
-clone_type_gDNA_num<-clone_type_gDNA[,5:ncol(clone_type_gDNA)]
+clone_type_gDNA_num<-clone_type_gDNA[,4:ncol(clone_type_gDNA)]
 clone_type_gDNA_num2<-t(apply(clone_type_gDNA_num,1,as.numeric))
-colnames(clone_type_gDNA_num2)<-colnames(clone_type_gDNA[,5:ncol(clone_type_gDNA)])
+colnames(clone_type_gDNA_num2)<-colnames(clone_type_gDNA[,4:ncol(clone_type_gDNA)])
 
 clone_type_gDNA_num_reduced<-clone_type_gDNA_num2[,which(colSums(clone_type_gDNA_num2)!=0)]
 ##118,223 clones that at least one sample has 
-save(clone_type_gDNA_df,clone_type_gDNA_num_reduced,reads_clones_annot,data_gDNA_long,file="~/VDJ/Data/clones_gDNA.Rdata")
+
+
 
 
 ############################################
@@ -60,18 +61,20 @@ data_cDNA<-data_merge[which(data_merge$amplification_template=="cDNA"),]
 data_cDNA_long<-data_cDNA[which(data_cDNA$clin!="AR" & data_cDNA$clin!="pre-AR"),]
 data_cDNA_long$isotype2<-replace(data_cDNA_long$isotype,data_cDNA_long$amplification_template=="gDNA","gDNA")
 data_cDNA_long$isotype2<-replace(data_cDNA_long$isotype2,data_cDNA_long$isotype2=="","UNMAPPED")
+data_cDNA_long$isotype2<-replace(data_cDNA_long$isotype2,data_cDNA_long$IGHM_naive_memory=="naive","IGHM_naive")
+data_cDNA_long$isotype2<-replace(data_cDNA_long$isotype2,data_cDNA_long$IGHM_naive_memory=="memory","IGHM_memory")
 
 ##Build the matrix with the clones by samples
 clone_type_cDNA<-t(as.data.frame(unclass(table(data_cDNA_long$V_J_lenghCDR3_CloneId,factor(data_cDNA_long$specimen_label)))))
 id.spec<-match(rownames(clone_type_cDNA),reads_clones_annot$specimen_id)
 clone_type_cDNA<-cbind(as.character(reads_clones_annot$clin[id.spec]),reads_clones_annot$time[id.spec],
-                       reads_clones_annot$Sample_id[id.spec],as.character(reads_clones_annot$subject_id[id.spec]),clone_type_cDNA)
-colnames(clone_type_cDNA)[1:4]<-c("clin","time","Sample_id","subject_id")
+                       as.character(reads_clones_annot$Individual.id[id.spec]),clone_type_cDNA)
+colnames(clone_type_cDNA)[1:3]<-c("clin","time","individual_id")
 clone_type_cDNA_df<-as.data.frame(clone_type_cDNA)
 
-clone_type_cDNA_num<-clone_type_cDNA[,5:ncol(clone_type_cDNA)]
+clone_type_cDNA_num<-clone_type_cDNA[,4:ncol(clone_type_cDNA)]
 clone_type_cDNA_num2<-t(apply(clone_type_cDNA_num,1,as.numeric))
-colnames(clone_type_cDNA_num2)<-colnames(clone_type_cDNA[,5:ncol(clone_type_cDNA)])
+colnames(clone_type_cDNA_num2)<-colnames(clone_type_cDNA[,4:ncol(clone_type_cDNA)])
 
 clone_type_cDNA_num_reduced<-clone_type_cDNA_num2[,which(colSums(clone_type_cDNA_num2)!=0)]
 ##2,419,988 clones that at least one sample has 

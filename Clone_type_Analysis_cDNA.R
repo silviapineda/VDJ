@@ -100,10 +100,13 @@ dev.off()
 write.csv(clones,file="clones_cDNA_RF.csv")
 table(data_cDNA_long[grep(colnames(clones)[1],data_cDNA_long$V_J_lenghCDR3_CloneId),c("clin","time")])
 
+##Study the clones selected
+clones<-read.csv("/Users/Pinedasans/VDJ/ResultsAllClones/VgeneUsage-Clone/clones_cDNA_RF.csv")
 id<-NULL
 for(i in 1:31){
   print(i)
   id<-c(id,grep(colnames(clones)[i],data_cDNA_long$V_J_lenghCDR3_CloneId))
+  
 }
 data_cDNA_long_clone<-data_cDNA_long[id,]
 data_cDNA_long_clone$clin<-factor(data_cDNA_long_clone$clin)
@@ -114,10 +117,24 @@ data_cDNA_long_clone_barplot<-data_cDNA_long_clone_barplot[which(data_cDNA_long_
 data_cDNA_long_clone_barplot<-data_cDNA_long_clone_barplot[order(data_cDNA_long_clone_barplot$Freq),]
 
 tiff("IndividualClonesRF.tiff",res=300,w=4000,h=2000)
-ggplot(data_cDNA_long_clone_barplot[order(data_cDNA_long_clone_barplot$clin),], aes(V_J_lenghCDR3_CloneId, y=Freq,fill=clin)) +
-  geom_bar(stat="identity",colour="black") + scale_fill_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ geom_col(position = position_stack(reverse = TRUE),colour="black")
+ggplot(data_cDNA_long_clone_barplot[order(data_cDNA_long_clone_barplot$clin),], 
+       aes(V_J_lenghCDR3_CloneId, y=Freq,fill=clin)) +
+  geom_bar(stat="identity",position = "dodge",colour="black") + scale_fill_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_col(position = position_stack(reverse = TRUE),colour="black")
 dev.off()
+
+tiff("IndividualClonesRF.tiff",res=300,w=4000,h=2000)
+ggplot(data_cDNA_long_clone_barplot[order(data_cDNA_long_clone_barplot$clin),], 
+       aes(V_J_lenghCDR3_CloneId, y=Freq,fill=clin)) + 
+  geom_bar(stat="identity",colour="black", position = "dodge",alpha=0.5) + 
+  scale_fill_manual(values=c("chartreuse4","dodgerblue3","darkorange2")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+ggplot(df, aes(x=factor(names), y=values, fill=factor(num))) + 
+  geom_bar(stat="identity", colour="black", position="dodge", alpha=0.1)
+
+
 
 library(gamlr)
 x<-data.matrix(clone_type_cDNA_num_filter)

@@ -141,6 +141,10 @@ table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_c
 data_gDNA<-data_merge[which(data_merge$amplification_template=="gDNA"),]
 data_gDNA_long<-data_gDNA[which(data_gDNA$clin=="NP" | data_gDNA$clin=="PNR" | data_gDNA$clin=="PR"),]
 
+###Number and mean by isotypes
+table(table(data_gDNA_long$specimen_label)!=0) #81 samples
+dim(data_gDNA_long)[1]/81
+
 ###########################
 ## 2. Diversity measures###
 ###########################
@@ -183,7 +187,7 @@ diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,-1])
 ### gDNA ####
 #############
 
-diversity_gDNA<-diversity_reads_clones[which(diversity_reads_clones$reads_gDNA>=100),]
+diversity_gDNA<-diversity_reads_clones[which(diversity_reads_clones$clones_gDNA>130),]
 
 ###Longitudinal Data
 diversity_long_gDNA<-diversity_gDNA[which(diversity_gDNA$clin=="NP" | diversity_gDNA$clin=="PNR" | diversity_gDNA$clin=="PR"),]
@@ -211,16 +215,16 @@ tiff("barplot_clones_time_gDNA.tiff",res=300,w=3000,h=2500)
 par(mfrow=c(3,1))
 barplot(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==0)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==0)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==0)],
         cex.names=0.8,las=2,ylim = c(0,4000),ylab = c("Clones"))
 legend(0, 4000, legend=levels(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]),col=COLOR,pch=15, cex=1)
 barplot(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==6)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==6)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==6)],
         cex.names=0.8,las=2,ylim = c(0,4000),ylab = c("Clones"))
 barplot(diversity_long_gDNA$clones_gDNA[which(diversity_long_gDNA$time2==24)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==24)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==24)],
         cex.names=0.8,las=2,ylim = c(0,4000),ylab = c("Clones"))
 dev.off()
 
@@ -229,16 +233,16 @@ tiff("barplot_reads_time_gDNA.tiff",res=300,w=3000,h=2500)
 par(mfrow=c(3,1))
 barplot(diversity_long_gDNA$reads_gDNA[which(diversity_long_gDNA$time2==0)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==0)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==0)],
         cex.names=0.8,las=2,ylim = c(0,20000),ylab = c("Reads"))
 legend(0, 20000, legend=levels(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]),col=COLOR,pch=15, cex=1)
 barplot(diversity_long_gDNA$reads_gDNA[which(diversity_long_gDNA$time2==6)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==6)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==6)],
         cex.names=0.8,las=2,ylim = c(0,20000),ylab = c("Reads"))
 barplot(diversity_long_gDNA$reads_gDNA[which(diversity_long_gDNA$time2==24)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==24)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==24)],
         cex.names=0.8,las=2,ylim = c(0,20000),ylab = c("Reads"))
 dev.off()
 
@@ -249,39 +253,53 @@ tiff("barplot_SHM_byClones_gDNA.tiff",res=300,w=3000,h=2500)
 par(mfrow=c(3,1))
 barplot(diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==0)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==0)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==0)],
         cex.names=0.8,las=2,ylim = c(0,0.2),ylab = c("SHM"))
 legend(0, .2, legend=levels(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]),col=COLOR,pch=15, cex=1)
 barplot(diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==6)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==6)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==6)],
         cex.names=0.8,las=2,ylim = c(0,0.2),ylab = c("SHM"))
 barplot(diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==24)],
         col = COLOR[diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]],
-        names.arg = diversity_long_gDNA$subject_id[which(diversity_long_gDNA$time2==24)],
+        names.arg = diversity_long_gDNA$Individual.id[which(diversity_long_gDNA$time2==24)],
         cex.names=0.8,las=2,ylim = c(0,0.2),ylab = c("SHM"))
 dev.off()
 
 ###Sample 8 is an outlier at 6 and 24
-diversity_long_gDNA_sample8<-diversity_long_gDNA[which(diversity_long_gDNA$subject_id!="sample8_6" & diversity_long_gDNA$subject_id!="sample8_24"),]
+diversity_long_gDNA_sample8<-diversity_long_gDNA[which(diversity_long_gDNA$Individual.id!="Individual8"),]
 
-tiff("boxplot_clones_gDNA.tiff",h=2000,w=1800,res=300)
+data_summary <- function(x) {
+       m <- mean(x)
+       ymin <- m-sd(x)
+       ymax <- m+sd(x)
+       return(c(y=m,ymin=ymin,ymax=ymax))
+   }
+tiff("boxplot_clones_gDNA.tiff",h=1800,w=3000,res=300)
 p1 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==0),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]), 
                 diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0,4000) +
-  labs(title="time 0",x="Clin", y = "Clones")
-p2 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==6),], 
-            aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]), 
-                diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==6)],fill=clin)) + ylim(0,4000) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 6",x="Clin", y = "Clones")
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0,4000) +
+  labs(title="time 0",x="Clinical outcome", y = "Number of clones") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
+
+p2 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time==6),], 
+            aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time==6)]), 
+                diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time==6)],fill=clin)) + ylim(0,4000) +
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  labs(title="time 6",x="Clinical outcome", y = "Number of clones")+ stat_summary(fun.data=data_summary) + theme(legend.position="none")
+
+
 p3 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==24),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]), 
                 diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==24)],fill=clin)) + ylim(0,4000) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 24",x="Clin", y = "Clones")
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
+ labs(title="time 24",x="Clinical outcome", y = "Number of clones") + stat_summary(fun.data=data_summary)+ theme(legend.position="none")
 
-multiplot(p1,p2,p3)
+
+#multiplot(p1,p2,p3)
+grid.arrange(p1, p2,p3,ncol=3)
 dev.off()
+
 summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]))
 summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==6)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]))
 summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==24)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]))
@@ -290,22 +308,24 @@ summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sa
 diversity_long_gDNA_sample6_24<-diversity_long_gDNA[which(diversity_long_gDNA$subject_id!="sample6_24"),]
 summary(glm(diversity_long_gDNA_sample6_24$clones_gDNA[which(diversity_long_gDNA_sample6_24$time2==6)] ~ diversity_long_gDNA_sample6_24$clin[which(diversity_long_gDNA_sample6_24$time2==6)]))
 
-tiff("boxplot_entropy_gDNA.tiff",h=2000,w=1800,res=300)
+tiff("boxplot_entropy_gDNA.tiff",h=1800,w=3000,res=300)
 p1 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==0),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]), 
                 diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==0)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(6,11) +
-  labs(title="time 0",x="Clin", y = "entropy")
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(6,11) +
+  labs(title="time 0",x="Clinical outcome", y = "Shannon entropy") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 p2 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==6),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]), 
-                diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==6)],fill=clin)) + ylim(6,11) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 6",x="Clin", y = "entropy")
+                diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==6)],fill=clin)) + 
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(6,11) +
+  labs(title="time 6",x="Clinical outcome", y = "Shannon entropy") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 p3 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==24),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]), 
-                diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==24)],fill=clin)) + ylim(6,11) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 24",x="Clin", y = "entropy")
+                diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==24)],fill=clin)) + 
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(6,11) +
+  labs(title="time 24",x="Clinical outcome", y = "Shannon entropy") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 
-multiplot(p1,p2,p3)
+grid.arrange(p1, p2,p3,ncol=3)
 dev.off()
 summary(glm(diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]))
 summary(glm(diversity_long_gDNA_sample8$entropy[which(diversity_long_gDNA_sample8$time2==6)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]))
@@ -332,22 +352,24 @@ summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sa
               diversity_long_gDNA_sample8$immunosuppression[which(diversity_long_gDNA_sample8$time2==24)]+diversity_long_gDNA_sample8$hla_mismatch[which(diversity_long_gDNA_sample8$time2==24)]))
 
 
-tiff("boxplot_SHM_gDNA.tiff",h=2000,w=1800,res=300)
+tiff("boxplot_SHM_gDNA.tiff",h=1800,w=3000,res=300)
 p1 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==0),], 
             aes(factor(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]), 
                 diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==0)],fill=clin)) + 
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0.01,0.09) +
-  labs(title="time 0",x="Clin", y = "SHM") 
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0.01,0.09) +
+  labs(title="time 0",x="Clinical outcome", y = "Somatic Hypermutation") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 p2 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==6),], 
             aes(factor(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]), 
-                diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==6)],fill=clin)) + ylim(0.01,0.09) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 6",x="Clin", y = "SHM")
+                diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==6)],fill=clin)) +
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0.01,0.09) +
+  labs(title="time 6",x="Clinical outcome", y = "Somatic Hypermutation") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 p3 = ggplot(diversity_long_gDNA[which(diversity_long_gDNA$time2==24),], 
             aes(factor(diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==24)]), 
-                diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==24)],fill=clin)) + ylim(0.01,0.09) +
-  geom_boxplot() + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 24",x="Clin", y = "SHM")
+                diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==24)],fill=clin)) +
+  geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + ylim(0.01,0.09) +
+  labs(title="time 24",x="Clinical outcome", y = "Somatic Hypermutation") + stat_summary(fun.data=data_summary)  + theme(legend.position="none")
 
-multiplot(p1,p2,p3)
+grid.arrange(p1, p2,p3,ncol=3)
 dev.off()
 summary(glm(diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==0)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==0)]))
 summary(glm(diversity_long_gDNA$SHM_gDNA_byClones[which(diversity_long_gDNA$time2==6)] ~ diversity_long_gDNA$clin[which(diversity_long_gDNA$time2==6)]))
@@ -364,22 +386,14 @@ fm_null <- lmer(diversity_long_gDNA_sample8$clones_gDNA ~ clin + time + (time | 
 fm_full <- lmer(diversity_long_gDNA_sample8$clones_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA_sample8,REML = F)
 anova(fm_full, fm_null) 
 
-tiff("plot_lmer_clones_gDNA.tiff",h=1700,w=2000,res=300)
+tiff("plot_lmer_clones_gDNA.tiff",h=1200,w=1400,res=300)
 p <- ggplot(fm_full, aes(x = time, y = diversity_long_gDNA_sample8$clones_gDNA, colour = clin)) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  geom_point(size=3) +
-  geom_smooth(method="lm",size=1.5) +
-  labs(x = "time (months)",y = "Clones") 
+  geom_point(size=1.2) +
+  geom_smooth(method="lm",size=0.8) +
+  labs(x = "Time (months)",y = "Number of clones") + theme_bw() + theme_light()
 
 print(p)
-dev.off()
-
-tiff("Plot_int_clones_gDNA.tiff",h=1000,w=1500,res=300)
-eff_df <- data.frame(Effect(c("clin", "time"), fm_full))
-ggplot(eff_df,aes(time,fit,group=clin)) +
-  geom_line(aes(time,fit,group=clin,colour=clin),size=1.5)+
-  geom_ribbon(aes(time,ymin=lower,ymax=upper),alpha=0.2) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))
 dev.off()
 
 
@@ -389,34 +403,27 @@ fm_full <- lmer(diversity_long_gDNA_sample8$entropy ~  clin*time + (time | Sampl
 anova(fm_full, fm_null) 
 
 
-tiff("plot_lmer_entropy_gDNA.tiff",h=1700,w=2000,res=300)
+tiff("plot_lmer_entropy_gDNA.tiff",h=1200,w=1400,res=300)
 p <- ggplot(fm_full, aes(x = time, y = diversity_long_gDNA_sample8$entropy, colour = clin)) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  geom_point(size=3) +
-  geom_smooth(method="lm",size=1.5)+
-  labs(x = "time (months)",y = "Entropy (gDNA)") 
+  geom_point(size=1.2) +
+  geom_smooth(method="lm",size=0.8) +
+  labs(x = "Time (months)",y = "Shannon entropy") + theme_bw() + theme_light()
+
 print(p)
 dev.off()
 
-tiff("Plot_int_entropy_gDNA.tiff",h=1000,w=1500,res=300)
-eff_df <- data.frame(Effect(c("clin", "time"), fm_full))
-ggplot(eff_df,aes(time,fit,group=clin),size=1.5) +
-  geom_line(aes(time,fit,group=clin,colour=clin),size=1.5)+
-  geom_ribbon(aes(time,ymin=lower,ymax=upper),alpha=0.3) +
-  scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2"))
-dev.off()
-
-
 ##SHM
-fm_null <- lmer(diversity_long_gDNA$SHM_gDNA ~ clin + time + (time | Sample_id),data=diversity_long_gDNA,REML = F)
-fm_full <- lmer(diversity_long_gDNA$SHM_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA,REML = F)
+fm_null <- lmer(diversity_long_gDNA_sample8$SHM_gDNA ~ clin + time + (time | Sample_id),data=diversity_long_gDNA_sample8,REML = F)
+fm_full <- lmer(diversity_long_gDNA_sample8$SHM_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA_sample8,REML = F)
 anova(fm_full, fm_null)
 
-tiff("plot_lmer_SHM_gDNA.tiff",h=1700,w=2000,res=300)
-p <- ggplot(fm_full, aes(x = time, y = diversity_long_gDNA$SHM_gDNA, colour = clin)) +
+tiff("plot_lmer_SHM_gDNA.tiff",h=1200,w=1400,res=300)
+p <- ggplot(fm_full, aes(x = time, y = diversity_long_gDNA_sample8$SHM_gDNA, colour = clin)) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
-  geom_point(size=3) +
-  geom_smooth(method="lm",size=1.5)
+  geom_point(size=1.2) +
+  geom_smooth(method="lm",size=0.8) +
+  labs(x = "Time (months)",y = "SHM") + theme_bw() + theme_light()
 print(p)
 dev.off()
 ##It is borderline significant

@@ -82,6 +82,8 @@ sum_SHM_IGHD<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="IGHD"),]
 sum_SHM_IGHE<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="IGHE"),]
 sum_SHM_IGHG<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="IGHG"),]
 sum_SHM_IGHM<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="IGHM"),]
+sum_SHM_IGHM<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="IGHM"),]
+
 id_unmapped<-match(rownames(reads_clones_all),sum_SHM_unmapped$Group.1)
 id_IGHA<-match(rownames(reads_clones_all),sum_SHM_IGHA$Group.1)
 id_IGHD<-match(rownames(reads_clones_all),sum_SHM_IGHD$Group.1)
@@ -188,4 +190,28 @@ id<-match(reads_clones_annot$specimen_id,rownames(clones_naive_memory_matrix))
 
 reads_clones_annot$clones_naive<-clones_naive_memory_matrix[id,1]
 reads_clones_annot$clones_memory<-clones_naive_memory_matrix[id,2]
+
+sum_SHM_freq<-aggregate(data_merge$SHM_freq, by=list(data_merge$specimen_label,data_merge$IGHM_naive_memory), FUN=sum)
+sum_SHM_naive<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="naive"),]
+sum_SHM_memory<-sum_SHM_freq[which(sum_SHM_freq$Group.2=="memory"),]
+
+id_naive<-match(reads_clones_annot$specimen_id,sum_SHM_naive$Group.1)
+id_memory<-match(reads_clones_annot$specimen_id,sum_SHM_memory$Group.1)
+
+reads_clones_SHM_isotypes<-cbind(sum_SHM_naive$x[id_naive],sum_SHM_memory$x[id_memory])
+colnames(reads_clones_SHM_isotypes)<-c("SHM_naive","SHM_memory")
+
+reads_clones_annot<-cbind(reads_clones_annot,reads_clones_SHM_isotypes)
+
+write.csv(reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/total_reads_clones.csv")
 save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+
+###Put the individuals in the data_merge
+load("/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+reads_clones_annot<-read.csv("/Users/Pinedasans/VDJ/Data/total_reads_clones.csv")
+
+xx<-match(data_merge$sample_id,reads_clones_annot$Sample_id)
+data_merge$individual_id<-reads_clones_annot[xx,"Individual.id"]
+save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+
+

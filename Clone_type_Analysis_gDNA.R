@@ -97,8 +97,12 @@ colnames(clone_df)<-c("clone","specimen","count")
 
 clone_df$clin = reads_clones_annot[clone_df$specimen,1]
 clone_df$time = reads_clones_annot[clone_df$specimen,3]
-
 clone_df$sample = reads_clones_annot[clone_df$specimen,2]
+
+clone_df$subject_id = reads_clones_annot[clone_df$specimen,5]
+splitop<-strsplit(as.character(clone_df$subject_id),"_")
+subject<-unlist(lapply(splitop, `[[`, 1))
+clone_df$subject_id = subject
 
 clone_df_noceros = clone_df[which(clone_df$count!=0),] #120,934
 
@@ -112,24 +116,32 @@ for(i in 1:length(persistance_clones)){
 clone_df_persistace<-clone_df[id,]
 #clone_df_persistace$time<-as.numeric(as.character(clone_df_persistace$time))
 
+##Delete the outlier sample8 
+clone_df_persistace<-clone_df_persistace[which(clone_df_persistace$sample!="301002"),]
+
+
 g1<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="NP"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ sample) + labs(x = "time", y = "Clonal persistance")
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  facet_grid(clin ~ subject_id) + labs(x = "time", y = "Clonal persistance")
 
 g2<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PNR"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ sample) + labs(x = "time", y = "Clonal persistant")
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  facet_grid(clin ~ subject_id) + labs(x = "time", y = "Clonal persistance")
 
 g3<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PR"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24,32)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ sample) + labs(x = "time", y = "Clonal persistant")
+  scale_x_continuous(breaks = c(0,6,12,24,32)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  facet_grid(clin ~ subject_id) + labs(x = "time", y = "Clonal persistance")
 
 tiff("Clonal_persistant_gDNA_long.tiff",res=300,h=1700,w=2700)
 multiplot(g1,g2,g3)
 dev.off()
 
+unique_clones<-unique(clone_df_persistace$clone)
+persitance_clones<-clone_type_gDNA_num_filter[,na.omit(match(unique_clones,colnames(clone_type_gDNA_num_filter)))]
+
+
 ####Individual analysis
-matrix_clones<-cbind(clone_type_gDNA_df[,2],clone_type_gDNA_num_filter)
+matrix_clones<-cbind( as.numeric(as.character(clone_type_gDNA_df[,2])),clone_type_gDNA_num_filter)
 set.seed(112233)
 fit<-VSURF(x = matrix_clones, y=factor(clone_type_gDNA_df[,1]),parallel = TRUE,ncores=4)
 clones<-data.frame(matrix_clones[,fit$varselect.interp])
@@ -138,5 +150,26 @@ set.seed(1000)
 rf_output <- randomForest(factor(clone_type_gDNA_df[,1])~.,data=clones,proximity=TRUE, keep.forest=T,ntree=1000)
 ###We do not see anything, but.. 
 ## Are the clones from cDNA overlapping with the ones in gDNA
-clones_cDNA<-read.csv("clones_cDNA_RF.csv")
+clones_cDNA<-read.csv("/Users/Pinedasans/VDJ/ResultsAllClones/VgeneUsage-Clone/clones_cDNA_RF.csv")
+match(colnames(clones_cDNA),colnames(matrix_clones))
 ###None overlap with gDNA
+
+###Find those clones that are expanded in PR
+PR_24<-clone_type_gDNA_num_reduced[which(clone_type_gDNA_df[,1]=="PR" & clone_type_gDNA_df[,2]==24),]
+id_specimen<-match(rownames(PR_24),rownames(clone_type_gDNA_num_reduced))
+PR_clones_95<-list()
+j=1
+for (i in id_specimen){
+  PR_specimen<-clone_type_gDNA_num_reduced[i,]
+  PR_specimen_nocero<-PR_specimen[which(PR_specimen!=0)]
+  #barplot(PR_specimen_nocero[order(PR_specimen_nocero,decreasing=T)])
+  PR_specimen_nocero_95<-PR_specimen_nocero[which(PR_specimen_nocero>quantile(PR_specimen_nocero,c(0.95)))]
+  PR_clones_95[[j]]<-PR_specimen_nocero_95
+  j<-j+1
+}
+
+###Common clone in the 95% more expanded clones
+intersect(names(PR_clones_95[[3]]),names(PR_clones_95[[5]]))
+table(data_gDNA_long_qc[grep("IGHV4-59_IGHJ6_36_1359",data_gDNA_long_qc$V_J_lenghCDR3_CloneId),"clin"],
+      data_gDNA_long_qc[grep("IGHV4-59_IGHJ6_36_1359",data_gDNA_long_qc$V_J_lenghCDR3_CloneId),"time"])
+

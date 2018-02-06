@@ -19,6 +19,9 @@ library("igraph")
 library("ineq")
 library("dplyr")
 library(lme4)
+library(gridExtra)
+library(grid)
+library(lattice)
 
 setwd("/Users/Pinedasans/VDJ/ResultsAllClones/")
 load("~/VDJ/Data/VDJ_clonesAllmerged.Rdata")
@@ -30,7 +33,7 @@ load("~/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 data_gDNA<-data_merge[which(data_merge$amplification_template=="gDNA"),]
 data_gDNA_long<-data_gDNA[which(data_gDNA$clin!="AR" & data_gDNA$clin!="pre-AR"),]
 reads_clones_annot_long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
-reads_clones_annot_long_gDNA<-reads_clones_annot_long[which(reads_clones_annot_long$reads_gDNA>100),]
+reads_clones_annot_long_gDNA<-reads_clones_annot_long[which(reads_clones_annot_long$clones_gDNA>=100),]
 id<-match(data_gDNA_long$specimen_label,reads_clones_annot_long_gDNA$specimen_id)
 data_gDNA_long_qc<-data_gDNA_long[which(is.na(id)==F),]
 data_gDNA_long_qc$specimen_label<-factor(data_gDNA_long_qc$specimen_label)
@@ -49,8 +52,8 @@ for (i in specimen){
   assign(paste0("edges",i),unique(data.frame(groups)))
   df_vertex<-data.frame(table(data_gDNA_long_qc_specimen$CloneId_CDR3))
   assign(paste0("vertex",i),df_vertex[which(df_vertex$Freq!=0),])
-  write.table(get(paste0("edges",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_gDNA/edges",i,".txt"),sep="\t",row.names = F)
-  write.table(get(paste0("vertex",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_gDNA/vertex",i,".txt"),sep="\t",row.names = F)
+  #write.table(get(paste0("edges",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_gDNA/edges",i,".txt"),sep="\t",row.names = F)
+  #write.table(get(paste0("vertex",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_gDNA/vertex",i,".txt"),sep="\t",row.names = F)
 }
 
 ##2. Apply the nucleotides-assembly-1.0.jar made by Mikel
@@ -98,8 +101,6 @@ reads_clones_annot_long_gDNA$time<-replace(reads_clones_annot_long_gDNA$time,rea
 reads_clones_annot_long_gDNA<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$time!=9),]
 reads_clones_annot_long_gDNA<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$time!=32),]
 
-tiff("plot_vertex_gini_cluster_gini_gDNA.tiff",h=1600,w=2000,res=300)
-
 reads_clones_annot_long_gDNA$timeplot<-ifelse(reads_clones_annot_long_gDNA$time==0,1,
                                ifelse(reads_clones_annot_long_gDNA$time==6,1.5,2))
 COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
@@ -113,7 +114,6 @@ plot(reads_clones_annot_long_gDNA$cluster_gini, reads_clones_annot_long_gDNA$ver
 #legend("bottomright",legend=c("NP","PNR","PR","t0","t6","t24"), 
  #      col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
   #     pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
-
 reads_clones_annot_Long_qc_time24<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$time==24),]
 
 par(fig=c(0,0.8,0.55,1), new=TRUE)
@@ -125,6 +125,39 @@ par(fig=c(0.65,1,0,0.8),new=TRUE)
 summary(lm(reads_clones_annot_Long_qc_time24$vertex_gini~reads_clones_annot_Long_qc_time24$clin))
 boxplot(reads_clones_annot_Long_qc_time24$vertex_gini~reads_clones_annot_Long_qc_time24$clin,
         col=c("chartreuse4", "dodgerblue3","darkorange2"),axes=FALSE)
+dev.off()
+
+scatter <- ggplot(data=reads_clones_annot_long_gDNA,aes(x=cluster_gini, y=vertex_gini)) + geom_point(aes(color=clin)) + 
+  scale_color_manual(values =c("chartreuse4", "dodgerblue3","darkorange2")) +
+  theme(legend.position = "none")
+
+plot_top <- ggplot(data=reads_clones_annot_Long_qc_time24, aes(x=cluster_gini, fill=clin)) + 
+  geom_density(alpha=.5) + 
+  scale_fill_manual(values = c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  theme(legend.position = "none")
+
+plot_right <- ggplot(data=reads_clones_annot_Long_qc_time24, aes(x=vertex_gini, fill=clin)) + 
+  geom_density(alpha=.5) + coord_flip() +
+  scale_fill_manual(values = c("chartreuse4", "dodgerblue3","darkorange2")) + 
+  theme(legend.position = "none")
+  
+empty <- ggplot()+geom_point(aes(1,1), color="white") +
+    theme(                              
+      plot.background = element_blank(), 
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(), 
+      panel.border = element_blank(), 
+      panel.background = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank()
+    )
+  
+# Arrange the plots together
+tiff("network_vertex_cluster_gini_type2.tiff",h=2000,w=2500,res=300)
+grid.arrange(plot_top, empty, scatter, plot_right, ncol=2, nrow=2, widths=c(4, 1), heights=c(1, 4))
 dev.off()
 
 ##Vertex gini 
