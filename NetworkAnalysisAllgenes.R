@@ -87,10 +87,12 @@ reads_clones_annot_long_gDNA$num_reads_max_cluster[id]<-num_reads_max_cluster
 reads_clones_annot_long_gDNA$clusters[id]<-clusters
 reads_clones_annot_long_gDNA$clonal_expansion<-(reads_clones_annot_long_gDNA$num_reads_max_cluster/reads_clones_annot_long_gDNA$reads_gDNA)*100
 
+
 reads_clones_annot_long_gDNA$clin<-factor(reads_clones_annot_long_gDNA$clin)
 
 ###Delete sample 8 from the analysis
-reads_clones_annot_long_gDNA<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$subject_id!="sample8_6" & reads_clones_annot_long_gDNA$subject_id!="sample8_24"),]
+reads_clones_annot_long_gDNA<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$Individual.id!="Individual8"),]
+
 
 ##change the 12 for the 6                                                                             
 reads_clones_annot_long_gDNA$time<-replace(reads_clones_annot_long_gDNA$time,reads_clones_annot_long_gDNA$time==12,6)
