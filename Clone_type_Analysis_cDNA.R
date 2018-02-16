@@ -28,8 +28,81 @@ library(pheatmap)
 setwd("/Users/Pinedasans/VDJ/ResultsAllClones//")
 load("~/VDJ/Data/clones_cDNA.Rdata")
 
-###Filter by clones that at least are share in 10% of the samples
-clone_type_cDNA_num_filter<-clone_type_cDNA_num_reduced[,colSums(clone_type_cDNA_num_reduced!=0)>5] #3,795
+
+###Filter by clones that at least are share in 2 samples
+clone_type_cDNA_num_filter<-clone_type_cDNA_num_reduced[,colSums(clone_type_cDNA_num_reduced!=0)>2] #12,352
+###present/no-present
+matrix_clones_presence<-apply(clone_type_cDNA_num_filter,1,function(x) ifelse(x==0,"No Present","Present"))
+clone_type_cDNA_df$time<-replace(clone_type_cDNA_df$time,clone_type_cDNA_df$time==12,6)
+matrix_clones_presence_time6<-matrix_clones_presence[,which(clone_type_cDNA_df$time==6)]
+matrix_clones_presence_time24<-matrix_clones_presence[,which(clone_type_cDNA_df$time==24)]
+
+p_value_6=NULL
+p_value_24=NULL
+for(i in 1:dim(matrix_clones_presence_time0)[1]){
+  print(i)
+  tab<-table(matrix_clones_presence_time6[i,],clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)])
+  if(dim(tab)[1]>1){
+    p_value_6[i]=fisher.test(tab)$p.value
+  }
+  tab<-table(matrix_clones_presence_time24[i,],clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==24)])
+  if(dim(tab)[1]>1){
+    p_value_24[i]=fisher.test(tab)$p.value
+  }
+}
+
+##time6
+matrix_clones_presence_significant_time6<-matrix_clones_presence_time6[which(p_value_6<0.05),] #4
+results_time6<-list()
+plots<-list()
+for(i in 1:dim(matrix_clones_presence_significant_time6)[1]){
+  tab<-table(matrix_clones_presence_significant_time6[i,],clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)])
+  id<-match(names(which(matrix_clones_presence_significant_time6[i,]=="Present")),rownames(clone_type_cDNA_df))
+  id_clone<-match(rownames(matrix_clones_presence_significant_time6)[i],colnames(clone_type_cDNA_df))
+  results_time6[[i]]<-clone_type_cDNA_df[id,c(1:3,id_clone)]
+  clone_status<-matrix_clones_presence_significant_time6[i,]
+  clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)]
+  tab_str<-structable(clone_status~clinical_outcome)
+  mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time6)[i], 
+         gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
+  plots[[i]]<-grid.grab()
+  
+}
+grid.newpage()
+tiff("mosaicplot_time6_cDNA.tiff",res=300,h=5500,w=5500)
+grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],ncol=4)
+dev.off()
+
+names(results_time6)<-rownames(matrix_clones_presence_significant_time6)
+cat(capture.output(print(results_time6), file="clones_fisher_time6_cDNA.txt"))
+
+##time24
+matrix_clones_presence_significant_time24<-matrix_clones_presence_time24[which(p_value_24<0.05),] #21
+results_time24<-list()
+plots<-list()
+for(i in 1:dim(matrix_clones_presence_significant_time24)[1]){
+  tab<-table(matrix_clones_presence_significant_time24[i,],clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==24)])
+  id<-match(names(which(matrix_clones_presence_significant_time24[i,]=="Present")),rownames(clone_type_cDNA_df))
+  id_clone<-match(rownames(matrix_clones_presence_significant_time24)[i],colnames(clone_type_cDNA_df))
+  results_time24[[i]]<-clone_type_cDNA_df[id,c(1:3,id_clone)]
+  clone_status<-matrix_clones_presence_significant_time24[i,]
+  clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==24)]
+  tab_str<-structable(clone_status~clinical_outcome)
+  mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time24)[i],
+         gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
+  plots[[i]]<-grid.grab()
+}
+
+grid.newpage()
+tiff("mosaicplot_time24_cDNA.tiff",res=300,h=5500,w=5500)
+grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]], plots[[7]],
+             plots[[8]],plots[[9]],plots[[10]],plots[[11]],plots[[12]],plots[[13]],plots[[14]],
+             plots[[15]],plots[[16]],plots[[17]],plots[[18]],plots[[19]],plots[[20]],plots[[21]],ncol=5)
+dev.off()
+
+names(results_time24)<-rownames(matrix_clones_presence_significant_time24)
+cat(capture.output(print(results_time24), file="clones_fisher_time24_cDNA.txt"))
+
 
 ##Distribution of clones
 clone_distribution<-colSums(clone_type_cDNA_num_filter)
