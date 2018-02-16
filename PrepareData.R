@@ -22,7 +22,7 @@ library("bcRep")
 setwd("/Users/Pinedasans/VDJ/Data/")
 
 ##Read all the files and save into and Rdata all together
-files <- list.files("/Users/Pinedasans/Data/VDJ/part_tables_together/")
+files <- list.files("/Users/Pinedasans/VDJ/Data/part_tables_together")
 
 data <- c()
 for(i in files) {
