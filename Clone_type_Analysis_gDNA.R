@@ -155,200 +155,129 @@ p_value_24[which(p_value_24<0.05)]
 names(results_time24)<-rownames(matrix_clones_presence_significant_time24)
 cat(capture.output(print(results_time24), file="clones_fisher_time24.txt"))
 
-#########
-##Analysis 2: Measuring Clonal expansion
-########
-reads_clones_annot_qc<-reads_clones_annot[which(reads_clones_annot$clones_gDNA>100),]
-id_sample<-match(rownames(clone_type_gDNA_num_reduced_no8),reads_clones_annot_qc$specimen_id)
-total_clones<-reads_clones_annot_qc[na.omit(id_sample),"clones_gDNA"]
 
-clone_type_gDNA_num_reduced_no8_qc<-clone_type_gDNA_num_reduced_no8[na.omit(match(reads_clones_annot_qc$specimen_id,rownames(clone_type_gDNA_num_reduced_no8))),]
-clone_type_gDNA_df_no8_qc<-clone_type_gDNA_df_no8[na.omit(match(reads_clones_annot_qc$specimen_id,rownames(clone_type_gDNA_df_no8))),]
-clone_matrix_freq<-apply(clone_type_gDNA_num_reduced_no8_qc,2,function(x) x/total_clones)
-clone_matrix_freq_time0<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==0),]
-clone_matrix_freq_time6<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==6),]
-clone_matrix_freq_time24<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==24),]
+###############
+## Find if there is something longitudinally
+##############
 
-clone_matrix_freq_time0_NP<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==0 & clone_type_gDNA_df_no8_qc$cline=="NP"),]
-clone_matrix_freq_time0_PNR<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==0 & clone_type_gDNA_df_no8_qc$cline=="PNR"),]
-clone_matrix_freq_time0_PR<-clone_matrix_freq[which(clone_type_gDNA_df_no8_qc$time==0 & clone_type_gDNA_df_no8_qc$cline=="PR"),]
+##Obtain the persistance by sample
+##Each sample need to have at least two time points and we count the persistance across time points
 
-##Distribution of clones
-clone_distribution_time0<-colSums(clone_matrix_freq_time0)
-clone_distribution_time0[order(clone_distribution_time0,decreasing = T)]
-barplot(clone_distribution_time0[order(clone_distribution_time0,decreasing = T)][1:100])
-
-ggplot(data=clone_distribution_time0, aes(x=clone_distribution_time0, fill=clone_type_gDNA_df_no8_qc$clin)) + 
-  geom_density(alpha=.5) + 
-  scale_fill_manual(values = c("chartreuse4", "dodgerblue3","darkorange2")) + 
-  theme(legend.position = "none")
-
-clone_distribution_time0_NP<-colSums(clone_matrix_freq_time0_NP)
-clone_distribution_time0_PNR<-colSums(clone_matrix_freq_time0_PNR)
-clone_distribution_time0_PR<-colSums(clone_matrix_freq_time0_PR)
-
-plot.multi.dens( list(clone_distribution_time0_NP,clone_distribution_time0_PR))
-plot(density(clone_distribution_time0_NP))
-
-###Find if there is something longitudinally
+###Delete the time 9 
+clone_type_gDNA_df_no8_qc_notime9<-clone_type_gDNA_df_no8_qc[which(rownames(clone_type_gDNA_df_no8_qc)!="7_S63"),]
+clone_type_gDNA_num_reduced_no8_qc_notime9<-clone_type_gDNA_num_reduced_no8_qc[which(rownames(clone_type_gDNA_num_reduced_no8_qc)!="7_S63"),]
 ###To measure which individuals have clones across data points
-sample<-unique(clone_type_gDNA_df$individual_id)
-
+sample<-unique(clone_type_gDNA_df_no8_qc$individual_id)
 #filter by the ones who has three time points to study the persistance
-sample_filter<-sample[-c(5,6,7,15,17,18,21,27)]
+sample_filter<-sample[-c(5,7)]
 persistance<-list()  
 for (i in 1:length(sample_filter)){
   print(i)
-  clone_matrix_sample<-clone_type_gDNA_num_reduced[which(clone_type_gDNA_df$individual_id==sample_filter[i]),]
-  time0<-clone_matrix_sample[1,which(clone_matrix_sample[1,]!=0)]
-  time6<-clone_matrix_sample[2,which(clone_matrix_sample[2,]!=0)]
-  time24<-clone_matrix_sample[3,which(clone_matrix_sample[3,]!=0)]
-  persistance[[i]]<-intersect(names(time0),names(time6))
-  persistance[[i]]<-unique(c(persistance[[i]],intersect(names(time6),names(time24))))
-  
+  clone_matrix_sample<-clone_type_gDNA_num_reduced_no8_qc[which(clone_type_gDNA_df_no8_qc$individual_id==sample_filter[i]),]
+  if(dim(clone_matrix_sample)[1]==3){
+    time0<-clone_matrix_sample[1,which(clone_matrix_sample[1,]!=0)]
+    time6<-clone_matrix_sample[2,which(clone_matrix_sample[2,]!=0)]
+    time24<-clone_matrix_sample[3,which(clone_matrix_sample[3,]!=0)]
+    persistance[[i]]<-intersect(names(time0),names(time6))
+    persistance[[i]]<-unique(c(persistance[[i]],intersect(names(time6),names(time24))))
+    persistance[[i]]<-unique(c(persistance[[i]],intersect(names(time0),names(time24))))
+  } else {
+    time0<-clone_matrix_sample[1,which(clone_matrix_sample[1,]!=0)]
+    time6<-clone_matrix_sample[2,which(clone_matrix_sample[2,]!=0)]
+    persistance[[i]]<-intersect(names(time0),names(time6))  
+  }
 }
 names(persistance)<-sample_filter
 
 
-######
-##Fish plot for clones by time
-#####
-library(fishplot)
-timepoints=c(0,6,24)
-library(RColorBrewer)
-qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
-col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
-
-for (i in 6:length(sample_filter)){
-  print(i)
-  if(length(persistance[[i]])>1){
-    clone_matrix_sample<-clone_type_gDNA_num_reduced[which(clone_type_gDNA_df$Sample_id==sample_filter[i]),]
-    clone_type_df_sample<-clone_type_gDNA_df[which(clone_type_gDNA_df$Sample_id==sample_filter[i]),1:4]
-    id<-match(persistance[[i]],colnames(clone_matrix_sample))
-    clone_fish<-clone_matrix_sample[,id]
-    fish = createFishObject(t(clone_fish),parents = rep(0,ncol(clone_fish)),timepoints=timepoints,col=sample(col_vector, ncol(clone_fish)))
-    fish = layoutClones(fish)
-    tiff(paste0(clone_type_df_sample$clin[1],"_",subject_filter[i],".tiff"),res=300,h=1500,w=1500)
-    fishPlot(fish,shape="spline",title.btm=paste0(clone_type_df_sample$clin[1],"_",subject_filter[i]),
-             cex.title=0.5, vlines=c(0,6,24), 
-             vlab=c("time 0","time 6","time 24"))
-    dev.off()
-  }
+###Number of clones that persist 
+persistance_number<-NULL
+for (i in 1:length(persistance)){
+  persistance_number[i]<-length(persistance[[i]])
 }
+clinical_outcome<-c("NP","NP","NP","NP","NP","NP","NP","PNR","PNR","PNR","PNR","PNR","PNR","PNR","PNR","PNR",
+                    "PR","PR","PR","PR","PR","PR","PR")
 
 
-###To obtain the clonal persistant 
-clone_df<-data.frame(table(data_gDNA_long$V_J_lenghCDR3_CloneId,data_gDNA_long$specimen_label))
+summary(glm(persistance_number~clinical_outcome))
+boxplot(persistance_number~clinical_outcome)
+
+
+##plotting persistence
+clone_df<-data.frame(table(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,data_gDNA_long_qc$specimen_label))
 colnames(clone_df)<-c("clone","specimen","count")
 
-clone_df$clin = reads_clones_annot[clone_df$specimen,1]
-clone_df$time = reads_clones_annot[clone_df$specimen,3]
-clone_df$individual = reads_clones_annot[clone_df$specimen,6]
+colnames(reads_clones_annot)[4]<-c("specimen")
+clone_merge<-merge(clone_df,reads_clones_annot[,c(1,3,4,6)],by = "specimen")
 
-clone_df$subject_id = reads_clones_annot[clone_df$specimen,5]
-splitop<-strsplit(as.character(clone_df$subject_id),"_")
-subject<-unlist(lapply(splitop, `[[`, 1))
-clone_df$subject_id = subject
+clone_df_noceros = clone_merge[which(clone_merge$count!=0),] #120,934
 
-clone_df_noceros = clone_df[which(clone_df$count!=0),] #120,934
-
+unique_clones<-unique(unlist(persistance))
 id<-NULL
-persistance_clones<-unlist(persistance)
-for(i in 1:length(persistance_clones)){
+for (i in 1:length(unique_clones)){
   print(i)
-  id<-c(id,grep(persistance_clones[i],clone_df$clone))
+  id<-c(id,grep(unique_clones[i],clone_df_noceros$clone))
 }
 
-clone_df_persistace<-clone_df[id,]
+clone_df_persistace<-clone_df_noceros[id,]
+clone_df_persistace$time<-replace(clone_df_persistace$time,clone_df_persistace$time=="32","24")
 clone_df_persistace$time<-as.numeric(as.character(clone_df_persistace$time))
-
-##Delete the outlier sample8 
-clone_df_persistace<-clone_df_persistace[which(clone_df_persistace$individual!="Individual8"),]
-##Time 32 into time 24
-clone_df_persistace$time<-replace(clone_df_persistace$time,clone_df_persistace$time==32,24)
 
 g1<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="NP"),], aes(x=time,y=count,group=clone,fill=clone)) +
   scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ individual) + labs(x = "time", y = "Clonal persistance")
+  facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 g2<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PNR"),], aes(x=time,y=count,group=clone,fill=clone)) +
   scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ individual) + labs(x = "time", y = "Clonal persistance")
+  facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 g3<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PR"),], aes(x=time,y=count,group=clone,fill=clone)) +
   scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
-  facet_grid(clin ~ individual) + labs(x = "time", y = "Clonal persistance")
+  facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 tiff("Clonal_persistant_gDNA_long.tiff",res=300,h=1700,w=2700)
 multiplot(g1,g2,g3)
 dev.off()
 
-unique_clones<-unique(clone_df_persistace$clone)
-persitance_clones<-clone_type_gDNA_num_filter[,na.omit(match(unique_clones,colnames(clone_type_gDNA_num_filter)))]
 
+###Expanded clones
+expansion_NP<-clone_df_persistace$count[which(clone_df_persistace$clin=="NP")]
+expansion_PNR<-clone_df_persistace$count[which(clone_df_persistace$clin=="PNR")]
+expansion_PR<-clone_df_persistace$count[which(clone_df_persistace$clin=="PR")]
 
-#
-#################################################
-###Find those clones that are expanded in PR ###
-################################################
-PR_24<-clone_type_gDNA_num_reduced[which(clone_type_gDNA_df[,1]=="PR" & clone_type_gDNA_df[,2]==24),]
-id_specimen<-match(rownames(PR_24),rownames(clone_type_gDNA_num_reduced))
-PR_clones_95<-list()
-PR_specimen_nocero<-list()
-j=1
-for (i in id_specimen){
-  PR_specimen<-clone_type_gDNA_num_reduced[i,]
-  xx<-PR_specimen[which(PR_specimen!=0)]
-  PR_specimen_nocero[[j]]<-xx
-  #barplot(PR_specimen_nocero[order(PR_specimen_nocero,decreasing=T)])
-  PR_specimen_nocero_95<-xx[which(xx>quantile(xx,c(0.95)))]
-  PR_clones_95[[j]]<-PR_specimen_nocero_95
-  j<-j+1
+expansion<-c(expansion_NP,expansion_PNR,expansion_PR)
+clinical_outcome_expansion<-c(rep("NP",length(expansion_NP)),rep("PNR",length(expansion_PNR)),rep("PR",length(expansion_PR)))
+
+summary(glm(expansion~clinical_outcome_expansion))
+boxplot(expansion~clinical_outcome_expansion)
+
+##Common clones that persist
+library (plyr)
+persistance_df <- ldply (persistance, data.frame)
+colnames(persistance_df)<-c("Individual","clone")
+persistance_df$clin<-c(rep("NP",55),rep("PNR",75),rep("PR",133))
+###NP
+NP_clones<-persistance_df[which(persistance_df$clin=="NP"),]
+table(duplicated(NP_clones$clone))
+##PNR
+PNR_clones<-persistance_df[which(persistance_df$clin=="PNR"),]
+table(duplicated(PNR_clones$clone))
+individual_persistance_PNR<-list()
+for(i in 1:9){
+  individual_persistance_PNR[[i]]<-PNR_clones[grep(PNR_clones[duplicated(PNR_clones$clone),2][i],PNR_clones$clone),]
 }
-barplot(PR_clones_95[[3]][order(PR_clones_95[[3]],decreasing=T)])
+##PR
+PR_clones<-persistance_df[which(persistance_df$clin=="PR"),]
+table(duplicated(PR_clones$clone))
+individual_persistance_PR<-list()
+for(i in 1:8){
+  individual_persistance_PR[[i]]<-PR_clones[grep(PR_clones[duplicated(PR_clones$clone),2][i],PR_clones$clone),]
+}
 
-###Common clones PR at time 24 
-clones12<-intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]]))
-clones13<-intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[3]]))
-clones14<-intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[4]]))
-clones15<-intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[5]]))
-clones23<-intersect(names(PR_specimen_nocero[[2]]),names(PR_specimen_nocero[[3]]))
-clones24<-intersect(names(PR_specimen_nocero[[2]]),names(PR_specimen_nocero[[4]]))
-clones25<-intersect(names(PR_specimen_nocero[[2]]),names(PR_specimen_nocero[[5]]))
-clones34<-intersect(names(PR_specimen_nocero[[3]]),names(PR_specimen_nocero[[4]]))
-clones35<-intersect(names(PR_specimen_nocero[[3]]),names(PR_specimen_nocero[[5]]))
-clones45<-intersect(names(PR_specimen_nocero[[4]]),names(PR_specimen_nocero[[5]]))
-
-clone123<-intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]])),
-                               names(PR_specimen_nocero[[3]])) #IGHV3-23_IGHJ4_30_5345
-clone124<-intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]])),
-                    names(PR_specimen_nocero[[4]]))#IGHV3-23_IGHJ4_45_17123
-clone125<-intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]])),
-                    names(PR_specimen_nocero[[5]]))
-clone234<-intersect(intersect(names(PR_specimen_nocero[[4]]),names(PR_specimen_nocero[[2]])),
-                    names(PR_specimen_nocero[[3]]))
-clone235<-intersect(intersect(names(PR_specimen_nocero[[5]]),names(PR_specimen_nocero[[2]])),
-                    names(PR_specimen_nocero[[3]]))#"IGHV3-33_IGHJ4_30_2804"
-clone134<-intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[4]])),
-                    names(PR_specimen_nocero[[3]]))
-clone135<-intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[5]])),
-                    names(PR_specimen_nocero[[3]]))
-clone245<-intersect(intersect(names(PR_specimen_nocero[[2]]),names(PR_specimen_nocero[[5]])),
-                    names(PR_specimen_nocero[[4]]))
-
-##All zero
-clone1234<-intersect(intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]])),
-          names(PR_specimen_nocero[[3]])),names(PR_specimen_nocero[[4]]))
-clone1235<-intersect(intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[2]])),
-                               names(PR_specimen_nocero[[3]])),names(PR_specimen_nocero[[5]]))
-clone2345<-intersect(intersect(intersect(names(PR_specimen_nocero[[5]]),names(PR_specimen_nocero[[2]])),
-                               names(PR_specimen_nocero[[3]])),names(PR_specimen_nocero[[4]]))
-clone1345<-intersect(intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[5]])),
-                               names(PR_specimen_nocero[[3]])),names(PR_specimen_nocero[[4]]))
-clone1245<-intersect(intersect(intersect(names(PR_specimen_nocero[[1]]),names(PR_specimen_nocero[[5]])),
-                               names(PR_specimen_nocero[[2]])),names(PR_specimen_nocero[[4]]))
-
-##Clones shared at time 24 for three individuals
-data_gDNA_long_qc[grep("IGHV3-23_IGHJ4_30_5345",data_gDNA_long_qc$CloneId_CDR3),c("individual_id","clin","time","cdr3_seq_aa_q")]
-data_gDNA_long_qc[grep("IGHV3-23_IGHJ4_45_17123",data_gDNA_long_qc$CloneId_CDR3),c("individual_id","clin","time","cdr3_seq_aa_q")]
-data_gDNA_long_qc[grep("IGHV3-33_IGHJ4_30_2804",data_gDNA_long_qc$CloneId_CDR3),c("individual_id","clin","time","cdr3_seq_aa_q")]
+results<-c(names(results_time0),names(results_time6),names(results_time24))
+match(results,PR_clones[duplicated(PR_clones$clone),2])
+PR_clones[duplicated(PR_clones$clone),2][c(3,7)]
+#Match with previous resulsts for PR: IGHV3-23_IGHJ4_45_17123 IGHV4-34_IGHJ6_42_2263
+match(results,PNR_clones[duplicated(PNR_clones$clone),2])
+PNR_clones[duplicated(PNR_clones$clone),2][6]
+##Match for PNR IGHV3-33_IGHJ4_30_2804
