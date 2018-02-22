@@ -112,21 +112,22 @@ tiff("network_vertex_cluster_gini.tiff",h=2000,w=2000,res=300)
 par(fig=c(0,0.8,0,0.8))
 plot(reads_clones_annot_long_gDNA$cluster_gini, reads_clones_annot_long_gDNA$vertex_gini,
      cex=reads_clones_annot_long_gDNA$timeplot,
-        col = cols,pch=20,ylab = "Vextex Gini",xlab = "Cluster Gini")
-#legend("bottomright",legend=c("NP","PNR","PR","t0","t6","t24"), 
- #      col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
-  #     pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
+        col = cols,pch=20,ylab = "Gini (Vextex)",xlab = "Gini (Cluster)",xlim=c(0.0,0.09),ylim=c(0.2,0.55))
+legend("bottomright",legend=c("NP","PNR","PR","t0","t6","t24"), 
+       col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
+       pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
 reads_clones_annot_Long_qc_time24<-reads_clones_annot_long_gDNA[which(reads_clones_annot_long_gDNA$time==24),]
 
 par(fig=c(0,0.8,0.55,1), new=TRUE)
 summary(lm(reads_clones_annot_Long_qc_time24$cluster_gini~reads_clones_annot_Long_qc_time24$clin))
 boxplot(reads_clones_annot_Long_qc_time24$cluster_gini~reads_clones_annot_Long_qc_time24$clin,
-        col=c("chartreuse4", "dodgerblue3","darkorange2"), horizontal=TRUE, axes=FALSE)
+        col=c("chartreuse4", "dodgerblue3","darkorange2"), horizontal=TRUE, axes=FALSE,
+        ylim=c(0.0,0.09))
 
 par(fig=c(0.65,1,0,0.8),new=TRUE)
 summary(lm(reads_clones_annot_Long_qc_time24$vertex_gini~reads_clones_annot_Long_qc_time24$clin))
 boxplot(reads_clones_annot_Long_qc_time24$vertex_gini~reads_clones_annot_Long_qc_time24$clin,
-        col=c("chartreuse4", "dodgerblue3","darkorange2"),axes=FALSE)
+        col=c("chartreuse4", "dodgerblue3","darkorange2"),axes=FALSE,ylim=c(0.2,0.55))
 dev.off()
 
 scatter <- ggplot(data=reads_clones_annot_long_gDNA,aes(x=cluster_gini, y=vertex_gini)) + geom_point(aes(color=clin)) + 
