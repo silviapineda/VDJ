@@ -159,10 +159,12 @@ cat(capture.output(print(results_time24), file="clones_fisher_time24.txt"))
 ###############
 ## Find if there is something longitudinally
 ##############
-
+##Consider only this that pass the filters
+reads_clones_annot_gDNA_qc<-reads_clones_annot_gDNA[which(reads_clones_annot_gDNA$clones_gDNA>100),]
+clone_type_gDNA_df_no8_qc<-clone_type_gDNA_df_no8[na.omit(match(reads_clones_annot_gDNA_qc$specimen_id,rownames(clone_type_gDNA_df_no8))),]
+clone_type_gDNA_num_reduced_no8_qc<-clone_type_gDNA_num_reduced_no8[na.omit(match(reads_clones_annot_gDNA_qc$specimen_id,rownames(clone_type_gDNA_num_reduced_no8))),]
 ##Obtain the persistance by sample
 ##Each sample need to have at least two time points and we count the persistance across time points
-
 ###Delete the time 9 
 clone_type_gDNA_df_no8_qc_notime9<-clone_type_gDNA_df_no8_qc[which(rownames(clone_type_gDNA_df_no8_qc)!="7_S63"),]
 clone_type_gDNA_num_reduced_no8_qc_notime9<-clone_type_gDNA_num_reduced_no8_qc[which(rownames(clone_type_gDNA_num_reduced_no8_qc)!="7_S63"),]
@@ -198,12 +200,19 @@ for (i in 1:length(persistance)){
 clinical_outcome<-c("NP","NP","NP","NP","NP","NP","NP","PNR","PNR","PNR","PNR","PNR","PNR","PNR","PNR","PNR",
                     "PR","PR","PR","PR","PR","PR","PR")
 
-
+COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
 summary(glm(persistance_number~clinical_outcome))
-boxplot(persistance_number~clinical_outcome)
-
+tiff("Boxplot_number_persistance_clones.tiff",res=300,h=1500,w=1000)
+boxplot(persistance_number~clinical_outcome,col=c("chartreuse4", "dodgerblue3","darkorange2"),ylab="Number of persistence clones")
+dev.off()
 
 ##plotting persistence
+#For this analysis we are putting a cut-off on clones because v-genes can be biased at low clonality 
+id<-match(data_gDNA_long$specimen_label,reads_clones_annot_gDNA_qc$specimen_id)
+data_gDNA_long_qc<-data_gDNA_long[which(is.na(id)==F),]
+data_gDNA_long_qc$specimen_label<-factor(data_gDNA_long_qc$specimen_label)
+
+
 clone_df<-data.frame(table(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,data_gDNA_long_qc$specimen_label))
 colnames(clone_df)<-c("clone","specimen","count")
 
@@ -249,13 +258,24 @@ expansion<-c(expansion_NP,expansion_PNR,expansion_PR)
 clinical_outcome_expansion<-c(rep("NP",length(expansion_NP)),rep("PNR",length(expansion_PNR)),rep("PR",length(expansion_PR)))
 
 summary(glm(expansion~clinical_outcome_expansion))
-boxplot(expansion~clinical_outcome_expansion)
+
+COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
+summary(glm(persistance_number~clinical_outcome))
+tiff("Boxplot_expansion_persistance_clones.tiff",res=300,h=1500,w=1000)
+boxplot(expansion~clinical_outcome_expansion,col=c("chartreuse4", "dodgerblue3","darkorange2"),ylab="Number of persistence clones")
+dev.off()
 
 ##Common clones that persist
 library (plyr)
 persistance_df <- ldply (persistance, data.frame)
 colnames(persistance_df)<-c("Individual","clone")
 persistance_df$clin<-c(rep("NP",55),rep("PNR",75),rep("PR",133))
+
+table(duplicated(persistance_df$clone))
+
+
+
+
 ###NP
 NP_clones<-persistance_df[which(persistance_df$clin=="NP"),]
 table(duplicated(NP_clones$clone))
@@ -272,6 +292,13 @@ table(duplicated(PR_clones$clone))
 individual_persistance_PR<-list()
 for(i in 1:8){
   individual_persistance_PR[[i]]<-PR_clones[grep(PR_clones[duplicated(PR_clones$clone),2][i],PR_clones$clone),]
+}
+
+individual_persistance_PR_data_frame<-do.call(rbind.data.frame, individual_persistance_PR)
+CDR3<-list()
+for(i in 1:dim(individual_persistance_PR_data_frame)[1]){
+  clone<-data_gDNA_long_qc[grep(individual_persistance_PR_data_frame$clone[1],data_gDNA_long_qc$V_J_lenghCDR3_CloneId),]
+  CDR3[[i]]<-clone[which(clone$clin=="PNR"),"cdr3_seq_aa_q"]
 }
 
 results<-c(names(results_time0),names(results_time6),names(results_time24))
