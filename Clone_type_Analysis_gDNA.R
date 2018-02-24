@@ -272,39 +272,16 @@ colnames(persistance_df)<-c("Individual","clone")
 persistance_df$clin<-c(rep("NP",55),rep("PNR",75),rep("PR",133))
 
 table(duplicated(persistance_df$clone))
-
-
-
-
-###NP
-NP_clones<-persistance_df[which(persistance_df$clin=="NP"),]
-table(duplicated(NP_clones$clone))
-##PNR
-PNR_clones<-persistance_df[which(persistance_df$clin=="PNR"),]
-table(duplicated(PNR_clones$clone))
-individual_persistance_PNR<-list()
-for(i in 1:9){
-  individual_persistance_PNR[[i]]<-PNR_clones[grep(PNR_clones[duplicated(PNR_clones$clone),2][i],PNR_clones$clone),]
-}
-##PR
-PR_clones<-persistance_df[which(persistance_df$clin=="PR"),]
-table(duplicated(PR_clones$clone))
-individual_persistance_PR<-list()
-for(i in 1:8){
-  individual_persistance_PR[[i]]<-PR_clones[grep(PR_clones[duplicated(PR_clones$clone),2][i],PR_clones$clone),]
+colnames(persistance_df)<-c("individual_id","V_J_lenghCDR3_CloneId","clin")
+clones<-unique(as.character(persistance_df[which(duplicated(persistance_df$V_J_lenghCDR3_CloneId)==T),"V_J_lenghCDR3_CloneId"]))
+clones_list_shared<-list()
+for(i in 1:length(clones)){
+  clones_list_shared[[i]]<-persistance_df[grep(clones[i],persistance_df$V_J_lenghCDR3_CloneId),]
 }
 
-individual_persistance_PR_data_frame<-do.call(rbind.data.frame, individual_persistance_PR)
-CDR3<-list()
-for(i in 1:dim(individual_persistance_PR_data_frame)[1]){
-  clone<-data_gDNA_long_qc[grep(individual_persistance_PR_data_frame$clone[1],data_gDNA_long_qc$V_J_lenghCDR3_CloneId),]
-  CDR3[[i]]<-clone[which(clone$clin=="PNR"),"cdr3_seq_aa_q"]
-}
+clones_list_shared_df<-do.call(rbind.data.frame, clones_list_shared)
+clones_list_shared_df_cdr3aa<-merge(clones_list_shared_df,data_gDNA_long_qc[,c("individual_id","V_J_lenghCDR3_CloneId","clin","cdr3_seq_aa_q")],by=c("individual_id","V_J_lenghCDR3_CloneId","clin"))
+clones_list_shared_df_cdr3aa_unique<-unique(clones_list_shared_df_cdr3aa)
+clones_list_shared_df_cdr3aa_order<-clones_list_shared_df_cdr3aa_unique[order(clones_list_shared_df_cdr3aa_unique$V_J_lenghCDR3_CloneId),]
+write.csv(clones_list_shared_df_cdr3aa_order,"clones_persistence_table3.csv")
 
-results<-c(names(results_time0),names(results_time6),names(results_time24))
-match(results,PR_clones[duplicated(PR_clones$clone),2])
-PR_clones[duplicated(PR_clones$clone),2][c(3,7)]
-#Match with previous resulsts for PR: IGHV3-23_IGHJ4_45_17123 IGHV4-34_IGHJ6_42_2263
-match(results,PNR_clones[duplicated(PNR_clones$clone),2])
-PNR_clones[duplicated(PNR_clones$clone),2][6]
-##Match for PNR IGHV3-33_IGHJ4_30_2804
