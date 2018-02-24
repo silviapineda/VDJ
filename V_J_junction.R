@@ -36,7 +36,7 @@ data_gDNA_long<-data_gDNA[which(data_gDNA$clin!="AR" & data_gDNA$clin!="pre-AR")
 reads_clones_annot_Long<-reads_clones_annot[which(reads_clones_annot$clin!="AR" & reads_clones_annot$clin!="pre-AR"),]
 
 #For this analysis we are putting a cut-off on clones because v-genes can be biased at low clonality 
-reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$clones_gDNA>100),]
+reads_clones_annot_Long_qc<-reads_clones_annot_Long[which(reads_clones_annot_Long$clones_gDNA>130),]
 
 id<-match(data_gDNA_long$specimen_label,reads_clones_annot_Long_qc$specimen_id)
 data_gDNA_long_qc<-data_gDNA_long[which(is.na(id)==F),]
@@ -62,7 +62,7 @@ vusage2<-vusage[which(vgenes$Individual_id!="Individual8"),]
 #Replace some time points
 vgenes2$time<-replace(vgenes2$time,vgenes2$time==13,24)
 vgenes2$time<-replace(vgenes2$time,vgenes2$time==12,6)
-vgenes2$time<-replace(vgenes2$time,vgenes2$time==32,24)
+#vgenes2$time<-replace(vgenes2$time,vgenes2$time==32,24)
 
 vgenes_filter<-vgenes2
 vusage_filter<-vusage2
@@ -112,9 +112,9 @@ vgenes_sign_0<-names(which(p.PR[1,]<0.05))
 vgenes_sign_6<-names(which(p.PR[2,]<0.05))
 vgenes_sign_24<-names(which(p.PR[3,]<0.05))
 
-p.adjust(p.PR[1,],method = "fdr")
-p.adjust(p.PR[2,],method = "fdr")
-p.adjust(p.PR[3,],method = "fdr")
+names(which(p.adjust(p.PR[1,],method = "fdr")<0.1)) 
+names(which(p.adjust(p.PR[2,],method = "fdr")<0.1)) 
+names(which(p.adjust(p.PR[3,],method = "fdr")<0.1)) 
 
 ##Heatmap with significant results
 id_sign_0<-match(vgenes_sign_0,colnames(vusage_filter))
