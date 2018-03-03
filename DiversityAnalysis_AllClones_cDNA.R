@@ -142,12 +142,54 @@ ggplot(data=diversity_long_cDNA, aes(x=time, y=clones_cDNA, group=Sample_id, sha
   ggtitle("Number Clones Longitudinal cDNA")
 
 
+diversity_long_cDNA$time2<-replace(diversity_long_cDNA$time,diversity_long_cDNA$time==12,6)
+diversity_long_cDNA$clin<-factor(diversity_long_cDNA$clin)
+#########################################
+## Difference proportions by isotypes ###
+#########################################
+IGHA_perc<-(diversity_long_cDNA$IGHA_isotypes/diversity_long_cDNA$reads_cDNA)*100
+IGHD_perc<-(diversity_long_cDNA$IGHD_isotypes/diversity_long_cDNA$reads_cDNA)*100
+IGHG_perc<-(diversity_long_cDNA$IGHG_isotypes/diversity_long_cDNA$reads_cDNA)*100
+IGHM_perc<-(diversity_long_cDNA$IGHM_isotypes/diversity_long_cDNA$reads_cDNA)*100
+IGH_naive_perc<-(diversity_long_cDNA$IGH_naive/diversity_long_cDNA$clones_cDNA)*100
+IGH_memory_perc<-(diversity_long_cDNA$IGH_memory/diversity_long_cDNA$clones_cDNA)*100
+
+summary(glm(IGHA_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHD_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHG_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHM_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGH_naive_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGH_memory_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+
+
+tiff("Boxplot_IGHD_perc.tiff",res=300,h=1500,w=1000)
+boxplot(IGHD_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]
+,col=c("chartreuse4", "dodgerblue3","darkorange2"),ylab="IGHD reads/Total reads (time 6)")
+dev.off()
+
+IGHA_perc<-(diversity_long_cDNA$clones_IGHA/diversity_long_cDNA$clones_cDNA)*100
+IGHD_perc<-(diversity_long_cDNA$clones_IGHD/diversity_long_cDNA$clones_cDNA)*100
+IGHG_perc<-(diversity_long_cDNA$clones_IGHG/diversity_long_cDNA$clones_cDNA)*100
+IGHM_perc<-(diversity_long_cDNA$clones_IGHM/diversity_long_cDNA$clones_cDNA)*100
+IGH_naive_perc<-(diversity_long_cDNA$clones_naive/diversity_long_cDNA$clones_cDNA)*100
+IGH_memory_perc<-(diversity_long_cDNA$clones_memory/diversity_long_cDNA$clones_cDNA)*100
+
+summary(glm(IGHA_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHD_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHG_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGHM_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGH_naive_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+summary(glm(IGH_memory_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]))
+
+tiff("Boxplot_IGHD_perc_clones.tiff",res=300,h=1500,w=1000)
+boxplot(IGH_naive_perc[which(diversity_long_cDNA$time2==6)]~diversity_long_cDNA$clin[which(diversity_long_cDNA$time2==6)]
+        ,col=c("chartreuse4", "dodgerblue3","darkorange2"),ylab="IGHD clones/Total clones (time 6)")
+dev.off()
+
 ##################################
 #####Analysis by time and clin ##
 ##################################
 
-diversity_long_cDNA$time2<-replace(diversity_long_cDNA$time,diversity_long_cDNA$time==12,6)
-diversity_long_cDNA$clin<-factor(diversity_long_cDNA$clin)
 ###Barplots
 #reads
 COLOR=c("chartreuse4", "dodgerblue3","darkorange2")
