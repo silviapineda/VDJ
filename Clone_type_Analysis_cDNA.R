@@ -39,7 +39,7 @@ matrix_clones_presence_time24<-matrix_clones_presence[,which(clone_type_cDNA_df$
 
 p_value_6=NULL
 p_value_24=NULL
-for(i in 1:dim(matrix_clones_presence_time0)[1]){
+for(i in 1:dim(matrix_clones_presence_time6)[1]){
   print(i)
   tab<-table(matrix_clones_presence_time6[i,],clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)])
   if(dim(tab)[1]>1){
@@ -52,7 +52,7 @@ for(i in 1:dim(matrix_clones_presence_time0)[1]){
 }
 
 ##time6
-matrix_clones_presence_significant_time6<-matrix_clones_presence_time6[which(p_value_6<0.05),] #4
+matrix_clones_presence_significant_time6<-matrix_clones_presence_time6[which(p_value_6<0.05),] #113
 results_time6<-list()
 plots<-list()
 for(i in 1:dim(matrix_clones_presence_significant_time6)[1]){
@@ -60,12 +60,12 @@ for(i in 1:dim(matrix_clones_presence_significant_time6)[1]){
   id<-match(names(which(matrix_clones_presence_significant_time6[i,]=="Present")),rownames(clone_type_cDNA_df))
   id_clone<-match(rownames(matrix_clones_presence_significant_time6)[i],colnames(clone_type_cDNA_df))
   results_time6[[i]]<-clone_type_cDNA_df[id,c(1:3,id_clone)]
-  clone_status<-matrix_clones_presence_significant_time6[i,]
-  clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)]
-  tab_str<-structable(clone_status~clinical_outcome)
-  mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time6)[i], 
-         gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
-  plots[[i]]<-grid.grab()
+  # clone_status<-matrix_clones_presence_significant_time6[i,]
+  # clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==6)]
+  # tab_str<-structable(clone_status~clinical_outcome)
+  #mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time6)[i], 
+         #gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
+  #plots[[i]]<-grid.grab()
   
 }
 grid.newpage()
@@ -76,6 +76,8 @@ dev.off()
 names(results_time6)<-rownames(matrix_clones_presence_significant_time6)
 cat(capture.output(print(results_time6), file="clones_fisher_time6_cDNA.txt"))
 
+results_time6_gDNA<-read.csv("clones_results_time6.csv")
+
 ##time24
 matrix_clones_presence_significant_time24<-matrix_clones_presence_time24[which(p_value_24<0.05),] #21
 results_time24<-list()
@@ -85,12 +87,12 @@ for(i in 1:dim(matrix_clones_presence_significant_time24)[1]){
   id<-match(names(which(matrix_clones_presence_significant_time24[i,]=="Present")),rownames(clone_type_cDNA_df))
   id_clone<-match(rownames(matrix_clones_presence_significant_time24)[i],colnames(clone_type_cDNA_df))
   results_time24[[i]]<-clone_type_cDNA_df[id,c(1:3,id_clone)]
-  clone_status<-matrix_clones_presence_significant_time24[i,]
-  clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==24)]
-  tab_str<-structable(clone_status~clinical_outcome)
-  mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time24)[i],
-         gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
-  plots[[i]]<-grid.grab()
+  # clone_status<-matrix_clones_presence_significant_time24[i,]
+  # clinical_outcome<-clone_type_cDNA_df$clin[which(clone_type_cDNA_df$time==24)]
+  # tab_str<-structable(clone_status~clinical_outcome)
+  # mosaic(tab_str,shade=T,main= rownames(matrix_clones_presence_significant_time24)[i],
+  #        gp = shading_hcl, gp_args = list(interpolate = c(1, 1.8)))
+  # plots[[i]]<-grid.grab()
 }
 
 grid.newpage()
@@ -102,7 +104,9 @@ dev.off()
 
 names(results_time24)<-rownames(matrix_clones_presence_significant_time24)
 cat(capture.output(print(results_time24), file="clones_fisher_time24_cDNA.txt"))
+results_time24_gDNA<-read.csv("clones_results_time24.csv")
 
+match(names(results_time6),results_time6_gDNA$X)
 
 ##Distribution of clones
 clone_distribution<-colSums(clone_type_cDNA_num_filter)

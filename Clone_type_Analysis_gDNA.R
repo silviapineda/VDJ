@@ -123,7 +123,7 @@ dev.off()
 p_value_6[which(p_value_6<0.05)]
 names(results_time6)<-rownames(matrix_clones_presence_significant_time6)
 cat(capture.output(print(results_time6), file="clones_fisher_time6.txt"))
-
+write.csv(names(results_time6),file="clones_results_time6.csv")
 ##time24
 matrix_clones_presence_significant_time24<-matrix_clones_presence_time24[which(p_value_24<0.05),] #21
 results_time24<-list()
@@ -154,13 +154,14 @@ dev.off()
 p_value_24[which(p_value_24<0.05)]
 names(results_time24)<-rownames(matrix_clones_presence_significant_time24)
 cat(capture.output(print(results_time24), file="clones_fisher_time24.txt"))
+write.csv(names(results_time24),file="clones_results_time24.csv")
 
 
 ###############
 ## Find if there is something longitudinally
 ##############
 ##Consider only this that pass the filters
-reads_clones_annot_gDNA_qc<-reads_clones_annot_gDNA[which(reads_clones_annot_gDNA$clones_gDNA>100),]
+reads_clones_annot_gDNA_qc<-reads_clones_annot[which(reads_clones_annot$clones_gDNA>100),]
 clone_type_gDNA_df_no8_qc<-clone_type_gDNA_df_no8[na.omit(match(reads_clones_annot_gDNA_qc$specimen_id,rownames(clone_type_gDNA_df_no8))),]
 clone_type_gDNA_num_reduced_no8_qc<-clone_type_gDNA_num_reduced_no8[na.omit(match(reads_clones_annot_gDNA_qc$specimen_id,rownames(clone_type_gDNA_num_reduced_no8))),]
 ##Obtain the persistance by sample
