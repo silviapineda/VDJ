@@ -214,4 +214,14 @@ xx<-match(data_merge$sample_id,reads_clones_annot$Sample_id)
 data_merge$individual_id<-reads_clones_annot[xx,"Individual.id"]
 save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 
+### Add naive and memory B-cells reads from the IGHM isotype
+## SHM<=4 is navie SHM>=4 is memory
+load("/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+data_merge$IGHM_naive_memory<-ifelse(data_merge$isotype=="IGHM" & data_merge$SHM<=4,"naive",
+                                     ifelse(data_merge$isotype=="IGHM" & data_merge$SHM>4,"memory",NA))
 
+read_naive_memory <- data.matrix(table(data_merge$specimen_label, data_merge$IGHM_naive_memory))
+id_naive_memory<-match(reads_clones_annot$specimen_id,rownames(read_naive_memory))
+reads_clones_annot$IGH_memory<-read_naive_memory[id_naive_memory,1]
+reads_clones_annot$IGH_naive<-read_naive_memory[id_naive_memory,2]
+save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
