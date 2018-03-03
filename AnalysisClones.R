@@ -140,7 +140,7 @@ colnames(common)<-specimen_common
 rownames(common)<-specimen_common
 
 #QC
-reads_clones_annot_qc<-reads_clones_annot[which(reads_clones_annot$reads_gDNA>100),]
+reads_clones_annot_qc<-reads_clones_annot[which(reads_clones_annot$clones_gDNA>100),]
 id<-match(reads_clones_annot_qc$specimen_id,colnames(common))
 common_qc<-common[na.omit(id),na.omit(id)]
 
