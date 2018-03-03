@@ -25,7 +25,7 @@ load("~/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 
 
 ##########################
-### cDNA isotype IGHA ###
+### cDNA isotype IGH- ###
 #########################
 data_cDNA<-data_merge[which(data_merge$amplification_template=="cDNA"),]
 data_cDNA_IGHA<-data_merge[which(data_merge$isotype=="IGHA"),]
@@ -50,8 +50,8 @@ for (i in specimen){
   assign(paste0("edges",i),unique(data.frame(groups)))
   df_vertex<-data.frame(table(data_cDNA_long_qc_specimen$CloneId_CDR3))
   assign(paste0("vertex",i),df_vertex[which(df_vertex$Freq!=0),])
-  write.table(get(paste0("edges",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_cDNA_IGHA/edges",i,".txt"),sep="\t",row.names = F)
-  write.table(get(paste0("vertex",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_cDNA_IGHA/vertex",i,".txt"),sep="\t",row.names = F)
+  #write.table(get(paste0("edges",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_cDNA_IGHA/edges",i,".txt"),sep="\t",row.names = F)
+  #write.table(get(paste0("vertex",i)),paste0("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_cDNA_IGHA/vertex",i,".txt"),sep="\t",row.names = F)
 }
 
 ##2. Apply the nucleotides-assembly-1.0.jar made by Mikel
@@ -88,6 +88,8 @@ reads_clones_annot_long_cDNA$clonal_expansion<-(reads_clones_annot_long_cDNA$num
 reads_clones_annot_long_cDNA$clin<-factor(reads_clones_annot_long_cDNA$clin)
 
 ##change the 12 for the 6                                                                             
+##Delete sample M154-S001
+reads_clones_annot_long_cDNA<-reads_clones_annot_long_cDNA[which(reads_clones_annot_long_cDNA$specimen_id!="M154-S001"),]
 reads_clones_annot_long_cDNA$time<-replace(reads_clones_annot_long_cDNA$time,reads_clones_annot_long_cDNA$time==12,6)
 ##Change the 13 for 24
 reads_clones_annot_long_cDNA$time<-replace(reads_clones_annot_long_cDNA$time,reads_clones_annot_long_cDNA$time==13,24)
@@ -106,9 +108,9 @@ par(fig=c(0,0.8,0,0.8))
 plot(reads_clones_annot_long_cDNA$cluster_gini, reads_clones_annot_long_cDNA$vertex_gini,
      cex=reads_clones_annot_long_cDNA$timeplot,
         col = cols,pch=20,ylab = "Vextex Gini",xlab = "Cluster Gini")
-#legend("bottomright",legend=c("NP","PNR","PR","t0","t6","t24"), 
- #      col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
-  #     pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
+legend("bottomright",legend=c("NP","PNR","PR","t0","t6","t24"), 
+       col=c("chartreuse4", "dodgerblue3","darkorange2","black","black","black"), 
+       pch=20,cex=c(1.2),pt.cex=c(1.6,1.6,1.6,1,1.5,2),ncol=2)
 
 reads_clones_annot_Long_qc_time24<-reads_clones_annot_long_cDNA[which(reads_clones_annot_long_cDNA$time==24),]
 par(fig=c(0,0.8,0.55,1), new=TRUE)
