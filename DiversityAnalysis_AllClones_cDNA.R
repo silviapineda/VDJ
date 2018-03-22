@@ -426,10 +426,10 @@ PNR_6_entropy<-NULL
 PNR_24_entropy<-NULL
 PR_6_entropy<-NULL
 PR_24_entropy<-NULL
-clones<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
-for (i in c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")){
+clones<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM")
+for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM")){
   assign(paste0("diversity_long_cDNA_",i),diversity_long_cDNA[which(diversity_long_cDNA[match(clones[j],colnames(diversity_long_cDNA))]>100),])
-  tiff(paste0("boxplot_entropy_cDNA_",i,".tiff"),h=2000,w=1800,res=300) 
+  tiff(paste0("boxplot_entropy_cDNA_",i,".tiff"),h=1800,w=3000,res=300) 
   p2 = ggplot(get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==6),], 
               aes(factor(get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==6)]), 
                   get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==6),match(i,colnames(get(paste0("diversity_long_cDNA_",i))))],fill=clin)) + 
@@ -456,10 +456,10 @@ for (i in c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","ent
   
   j=j+1
 }
-names(PR_6_entropy)<-c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")
-names(PR_24_entropy)<-c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")
-names(PNR_6_entropy)<-c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")
-names(PNR_24_entropy)<-c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")
+names(PR_6_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM")
+names(PR_24_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM")
+names(PNR_6_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM")
+names(PNR_24_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM")
 
 ##SHM
 j=1

@@ -76,6 +76,14 @@ vusage_filter<-vusage_filter[,which(apply(xx,2,function(x) sum(x==0))<=57)]
 ##27 genes in total
 vgenes_filter$clin<-factor(vgenes_filter$clin)
 
+NP_usage<-colSums(vusage_filter[which(vgenes_filter$clin=="NP"),])
+PNR_usage<-colSums(vusage_filter[which(vgenes_filter$clin=="PNR"),])
+PR_usage<-colSums(vusage_filter[which(vgenes_filter$clin=="PR"),])
+
+PR_usage[order(PR_usage)]
+PNR_usage[order(PNR_usage)]
+NP_usage[order(NP_usage)]
+
 #########
 ## Statistical analysis to find significant vgenes
 ########

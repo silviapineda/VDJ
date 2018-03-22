@@ -234,15 +234,15 @@ clone_df_persistace$time<-replace(clone_df_persistace$time,clone_df_persistace$t
 clone_df_persistace$time<-as.numeric(as.character(clone_df_persistace$time))
 
 g1<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="NP"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,200)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
   facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 g2<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PNR"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,200)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
   facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 g3<-ggplot(clone_df_persistace[which(clone_df_persistace$clin=="PR"),], aes(x=time,y=count,group=clone,fill=clone)) +
-  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,300)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
+  scale_x_continuous(breaks = c(0,6,12,24)) + scale_y_continuous(limits = c(0,200)) + geom_area(aes(fill=clone)) + theme(legend.position="none") + 
   facet_grid(clin ~ Individual.id) + labs(x = "time", y = "Clonal persistence")
 
 tiff("Clonal_persistant_gDNA_long.tiff",res=300,h=1700,w=2700)

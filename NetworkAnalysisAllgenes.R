@@ -203,14 +203,14 @@ dev.off()
 
 ###Once is in network format I plot the network
 ##NP
-specimen_NP<- c("7_S01", "7_S02", "7_S03", "7_S04", "7_S05", "7_S06", "7_S07", "7_S09", "7_S10", "7_S11", "7_S12", 
-                "7_S14", "7_S17", "7_S18", "7_S21", "7_S22", "7_S23", "7_S24", "7_S25", "7_S26", "7_S27",
+specimen_NP<- c("7_S01", "7_S02", "7_S03", "7_S04", "7_S06", "7_S10", "7_S11", "7_S12", "7_S14","7_S17","7_S18","7_S21",
+                 "7_S22", "7_S23", "7_S24", "7_S25", "7_S26", "7_S27",
                 "7_S28", "7_S29", "7_S30")
-specimen_PNR<-c("7_S32", "7_S33", "7_S34", "7_S35", "7_S36", "7_S37", "7_S38", "7_S39", "7_S40", "7_S41", "7_S42",
-                "7_S46", "7_S47", "7_S48" ,"7_S50" , "7_S51", "7_S53", "7_S54", "7_S55", "7_S56", "7_S57","7_S58","7_S59", "7_S60")
+specimen_PNR<-c("7_S32","7_S33","7_S34", "7_S35", "7_S36", "7_S37", "7_S38", "7_S39", "7_S40", "7_S42",
+                "7_S46", "7_S47", "7_S48","7_S50","7_S51","7_S53","7_S54" ,"7_S55", "7_S56", "7_S57","7_S58","7_S59", "7_S60")
 
-specimen_PR<-c("7_S61", "7_S62", "7_S63", "7_S64", "7_S65", "7_S66", "7_S67", "7_S68", "7_S69", "7_S70", "7_S71", "7_S72",
-               "7_S73", "7_S74", "7_S75", "7_S76", "7_S77", "7_S78", "7_S79", "7_S82", "7_S83")
+specimen_PR<-c("7_S61", "7_S62", "7_S64", "7_S65", "7_S66", "7_S67", "7_S68", "7_S69", "7_S70", "7_S71", "7_S72",
+               "7_S73", "7_S74", "7_S75", "7_S76", "7_S77", "7_S78", "7_S79","7_S81")
 
 for(i in specimen_NP) {
   edges <- read.delim(paste("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/long_gDNA/edges",i,".txt.outcome.txt",sep = ""))
@@ -222,7 +222,7 @@ for(i in specimen_NP) {
   E(net)$arrow.mode <- 0
   E(net)$width <- 0.4
   E(net)$color <- c("black")
-  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/network_gDNA",i,".tiff",sep=""),res=300,h=3000,w=3000)
+  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/",i,".tiff",sep=""),res=300,h=3000,w=3000)
   plot(net,vertex.label=NA,layout=layout_with_graphopt(net))
   dev.off()
 }
@@ -237,7 +237,7 @@ for(i in specimen_PNR) {
   E(net)$arrow.mode <- 0
   E(net)$width <- 0.4
   E(net)$color <- c("black")
-  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/network_gDNA",i,".tiff",sep=""),res=300,h=3000,w=3000)
+  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/",i,".tiff",sep=""),res=300,h=3000,w=3000)
   plot(net,vertex.label=NA,layout=layout_with_graphopt(net))
   dev.off()
 }
@@ -252,7 +252,7 @@ for(i in specimen_PR) {
   E(net)$arrow.mode <- 0
   E(net)$width <- 0.4
   E(net)$color <- c("black")
-  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/network_data/network_gDNA",i,".tiff",sep=""),res=300,h=3000,w=3000)
+  tiff(paste("/Users/Pinedasans/VDJ/ResultsAllClones/",i,".tiff",sep=""),res=300,h=3000,w=3000)
   plot(net,vertex.label=NA,layout=layout_with_graphopt(net))
   dev.off()
 }
