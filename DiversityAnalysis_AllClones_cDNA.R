@@ -74,6 +74,12 @@ for (i in 1:length(specimen_unique)){
   clones_specimen_IGHM<-data_specimen_unique[which(data_specimen_unique$isotype=="IGHM"),"V_J_lenghCDR3_CloneId"]
   clones_specimen_naive<-data_specimen_unique[which(data_specimen_unique$IGHM_naive_memory=="naive"),"V_J_lenghCDR3_CloneId"]
   clones_specimen_memory<-data_specimen_unique[which(data_specimen_unique$IGHM_naive_memory=="memory"),"V_J_lenghCDR3_CloneId"]
+  #To write file to run with Recon
+  write.delim(data.frame(table(table(clones_specimen_IGHA))),file=paste("clones_IGHA_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
+  write.delim(data.frame(table(table(clones_specimen_IGHD))),file=paste("clones_IGHD_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
+  write.delim(data.frame(table(table(clones_specimen_IGHE))),file=paste("clones_IGHE_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
+  write.delim(data.frame(table(table(clones_specimen_IGHG))),file=paste("clones_IGHG_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
+  write.delim(data.frame(table(table(clones_specimen_IGHM))),file=paste("clones_IGHM_",specimen_unique[i],".txt",sep=""),sep="\t",col.names=F)
   
   fi_unmapped<-as.numeric(table(clones_specimen_unmapped))/length(clones_specimen_unmapped)
   fi_IGHA<-as.numeric(table(clones_specimen_IGHA))/length(clones_specimen_IGHA)
@@ -118,6 +124,11 @@ write.csv(diversity,"/Users/Pinedasans/VDJ/Data/diversity_AllClones_cDNA.csv")
 #######################################
 
 diversity<-read.csv("/Users/Pinedasans/VDJ/Data/diversity_AllClones_cDNA.csv",header=T)
+diversity$IGHA_entropy_recon=ln(diversity$IGHA_est_1.0D)
+diversity$IGHD_entropy_recon=ln(diversity$IGHD_est_1.0D)
+diversity$IGHE_entropy_recon=ln(diversity$IGHE_est_1.0D)
+diversity$IGHG_entropy_recon=ln(diversity$IGHG_est_1.0D)
+diversity$IGHM_entropy_recon=ln(diversity$IGHM_est_1.0D)
 
 reads_clones_annot_cDNA<-reads_clones_annot[which(reads_clones_annot$cDNA=="cDNA"),]
 id<-match(reads_clones_annot_cDNA$specimen_id,diversity$X)
@@ -385,7 +396,8 @@ PNR_6_clones<-NULL
 PNR_24_clones<-NULL
 PR_6_clones<-NULL
 PR_24_clones<-NULL
-for (i in c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")){
+for (i in c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+            "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")){
   print(i)
    assign(paste0("diversity_long_cDNA_",i),diversity_long_cDNA[which(diversity_long_cDNA[match(i,colnames(diversity_long_cDNA))]>100),])
   tiff(paste0("boxplot_clones_cDNA_",i,".tiff"),h=1800,w=3000,res=300)
@@ -415,10 +427,45 @@ for (i in c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naiv
 
   j=j+1
 }
-names(PR_6_clones)<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
-names(PR_24_clones)<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
-names(PNR_6_clones)<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
-names(PNR_24_clones)<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
+for (i in c("IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")){
+  print(i)
+  assign(paste0("diversity_long_cDNA_",i),diversity_long_cDNA[which(diversity_long_cDNA[match(i,colnames(diversity_long_cDNA))]>100),])
+  tiff(paste0("boxplot_clones_cDNA_",i,".tiff"),h=1800,w=3000,res=300)
+  p2 = ggplot(get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==6),], 
+              aes(factor(get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==6)]), 
+                  get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==6),match(i,colnames(get(paste0("diversity_long_cDNA_",i))))],fill=clin)) + 
+    geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 6",x="Clinical outcome", y = "Number of clones") + 
+    stat_summary(fun.data=data_summary)  + theme(legend.position="none") +  theme(text = element_text(size=15)) 
+  
+  p3 = ggplot(get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==24),], 
+              aes(factor(get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==24)]), 
+                  get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==24),match(i,colnames(get(paste0("diversity_long_cDNA_",i))))],fill=clin)) +
+    geom_violin(adjust = .5) + scale_fill_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) + labs(title="time 24",x="Clinical outcome", y = "Number of clones") + 
+    stat_summary(fun.data=data_summary)  + theme(legend.position="none") + theme(text = element_text(size=15)) 
+  
+  grid.arrange(p2,p3,ncol=3)
+  dev.off()
+  PNR_6_clones[j]<-coef(summary(glm(get(paste0("diversity_long_cDNA_",i))[which(diversity_long_cDNA$time2==6),match(i,colnames(diversity_long_cDNA))] ~ 
+                                      get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==6)])))[2,4]
+  PR_6_clones[j]<-coef(summary(glm(get(paste0("diversity_long_cDNA_",i))[which(diversity_long_cDNA$time2==6),match(i,colnames(diversity_long_cDNA))] ~ 
+                                     get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==6)])))[3,4]
+  
+  PNR_24_clones[j]<-coef(summary(glm(get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==24),match(i,colnames(get(paste0("diversity_long_cDNA_",i))))] ~ 
+                                       get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==24)])))[2,4]
+  PR_24_clones[j]<-coef(summary(glm(get(paste0("diversity_long_cDNA_",i))[which(get(paste0("diversity_long_cDNA_",i))$time2==24),match(i,colnames(get(paste0("diversity_long_cDNA_",i))))] ~ 
+                                      get(paste0("diversity_long_cDNA_",i))$clin[which(get(paste0("diversity_long_cDNA_",i))$time2==24)])))[3,4]
+  
+  j=j+1
+}
+
+names(PR_6_clones)<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+                      "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
+names(PR_24_clones)<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+                       "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
+names(PNR_6_clones)<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+                       "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
+names(PNR_24_clones)<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+                        "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
 
 ##Entropy
 j=1
@@ -516,7 +563,8 @@ write.csv(result,file="ResultsBoxplots_cDNA.csv")
 #######################################
 
 ##Clones
-clones<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
+clones<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+          "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
 j<-1
 p_value_clones<-NULL
 for (i in clones){
@@ -529,7 +577,7 @@ for (i in clones){
   p_value_clones[j]<-anova(fm_full, fm_null)[2,8] 
   j=j+1
   
-  #tiff(paste0("plot_lmer_clones_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
+  tiff(paste0("plot_lmer_clones_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
   p <- ggplot(fm_full, aes(x = time, y = get(paste0("diversity_long_cDNA_",i))[match(i,colnames(get(paste0("diversity_long_cDNA_",i))))][,1], colour = clin)) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   geom_point(size=2) +
@@ -538,15 +586,17 @@ for (i in clones){
   
   
   print(p)
-  #dev.off()
+  dev.off()
 }
 names(p_value_clones)<-clones
 
 ##Entropy
-clones<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory")
+clones<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
+          "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
 j<-1
 p_value_entropy<-NULL
-for (i in c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")){
+for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory",
+            "IGHA_entropy_recon","IGHD_entropy_recon","IGHG_entropy_recon","IGHM_entropy_recon")){
   assign(paste0("diversity_long_cDNA_",i),diversity_long_cDNA[which(diversity_long_cDNA[match(clones[j],colnames(diversity_long_cDNA))]>100),])
   fm_null <- lmer(get(paste0("diversity_long_cDNA_",i))[match(i,colnames(get(paste0("diversity_long_cDNA_",i))))][,1] ~ 
                     clin + time + (1 | Sample_id),data=get(paste0("diversity_long_cDNA_",i)),REML = F)
@@ -566,7 +616,8 @@ for (i in c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","ent
   print(p)
   dev.off()
 }
-names(p_value_entropy)<-c("entropy_unmapped","entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")
+names(p_value_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory",
+                          "IGHA_entropy_recon","IGHD_entropy_recon","IGHG_entropy_recon","IGHM_entropy_recon")
 
 ##SHM
 clones<-c("clones_unmapped","clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM")
