@@ -45,10 +45,11 @@ data_gDNA_long_qc$specimen_label<-factor(data_gDNA_long_qc$specimen_label)
 vgenes<-as.data.frame(unclass(table(data_gDNA_long_qc$specimen_label,data_gDNA_long_qc$v_gene)))
 id.spec<-match(rownames(vgenes),reads_clones_annot_Long_qc$specimen_id)
 vgenes<-cbind(vgenes,reads_clones_annot_Long_qc$clin[id.spec],reads_clones_annot_Long_qc$time[id.spec],
-              reads_clones_annot_Long_qc$Sample_id[id.spec],reads_clones_annot_Long_qc$Individual.id[id.spec])
-colnames(vgenes)[65:68]<-c("clin","time","Sample_id","Individual_id")
+              reads_clones_annot_Long_qc$Sample_id[id.spec],reads_clones_annot_Long_qc$Individual.id[id.spec],
+              reads_clones_annot_Long_qc$ESRD[id.spec],reads_clones_annot_Long_qc$immunosuppression[id.spec],reads_clones_annot_Long_qc$Donor.Source[id.spec])
+colnames(vgenes)[65:71]<-c("clin","time","Sample_id","Individual_id","ESRD","immunosuppression","Source")
 
-vusage<-matrix(NA,nrow(vgenes),(ncol(vgenes)-4))
+vusage<-matrix(NA,nrow(vgenes),(ncol(vgenes)-7))
 for (i in 1:64){
   vusage[,i]<-vgenes[,i]/reads_clones_annot_Long_qc$clones_gDNA[id.spec]
 }
@@ -137,11 +138,20 @@ vusage_sign_6<-vusage_sign_6[which(vgenes_filter$time==6 & vgenes_filter$clin!="
 vusage_sign_24<-vusage_sign_24[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR"),]
 
 annotation_col_0 = data.frame(
-  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
+  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
+  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
 annotation_col_6 = data.frame(
-  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
+  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
+  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
 annotation_col_24 = data.frame(
-  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
+  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
+  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
 
 
 rownames(annotation_col_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]
@@ -153,8 +163,16 @@ rownames(vusage_sign_6)<-vgenes_filter$Individual_id[which(vgenes_filter$time==6
 rownames(vusage_sign_24)<-vgenes_filter$Individual_id[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]
 
 
+
 fill=c("chartreuse4","darkorange2")
-ann_colors = list (clin = c("NP" = fill[1], "PR" = fill[2]))
+fill2=brewer.pal(3,"Set2")
+#fill3 = brewer.pal(3,"Set1")
+#fill4 = b=brewer.pal(3,"Set3")
+
+ann_colors = list (clin = c("NP" = fill[1], "PR" = fill[2]),
+                   ESRD = c("Other/Uk" = fill2[1], "Reflux" = fill2[2], "Non-Immune/Strutural" = fill2[3]))
+                   #immunosuppression = c("Steroid-free" = fill3[1], "Steroid-based" = fill3[2]),
+                   #source = c("Cadaver" = fill4[1],"Living/related"=fill4[2]))
 
 colfunc<-colorRampPalette(c("white","red4"))
 tiff("heatmap_vgene_0.tiff",res=300,w=1500,h=1200)
@@ -179,6 +197,112 @@ boxplot(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$clin,
 boxplot(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$clin,
         col=c("chartreuse4","darkorange2"),ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 24")
 dev.off()
+
+tiff("boxplot_IGHV3-23_ESRD.tiff",res=300,w=1500,h=1000)
+par(mfrow=c(1,3))
+boxplot(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$ESRD,
+        ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 0",las=2)
+boxplot(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$ESRD,
+        ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 6",las=2)
+boxplot(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$ESRD,
+       ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 24",las=2)
+dev.off()
+
+summary(glm(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$clin + annotation_col_0$ESRD))
+summary(glm(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$clin + annotation_col_6$ESRD))
+summary(glm(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$clin + annotation_col_24$ESRD))
+
+summary(glm(vusage_sign_0[,"IGHV3-23"]~factor(annotation_col_0$ESRD)))
+summary(glm(vusage_sign_6[,"IGHV3-23"]~factor(annotation_col_6$ESRD)))
+summary(glm(vusage_sign_24[,"IGHV3-23"]~factor(annotation_col_24$ESRD)))
+
+
+#####Considering the 3 clinical outcomes
+vusage_sign_0<-vusage_sign_0[which(vgenes_filter$time==0),]
+vusage_sign_6<-vusage_sign_6[which(vgenes_filter$time==6),]
+vusage_sign_24<-vusage_sign_24[which(vgenes_filter$time==24),]
+
+annotation_col_0 = data.frame(
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==0)]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==0)]))
+#immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
+#source = factor(vgenes_filter$Source[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
+annotation_col_6 = data.frame(
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==6)]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==6)]))
+#immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
+#source = factor(vgenes_filter$Source[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
+annotation_col_24 = data.frame(
+  clin = factor(vgenes_filter$clin[which(vgenes_filter$time==24)]),
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==24)]))
+#immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
+#source = factor(vgenes_filter$Source[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
+
+
+rownames(annotation_col_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0)]
+rownames(annotation_col_6)<-vgenes_filter$Individual_id[which(vgenes_filter$time==6)]
+rownames(annotation_col_24)<-vgenes_filter$Individual_id[which(vgenes_filter$time==24)]
+
+rownames(vusage_sign_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0)]
+rownames(vusage_sign_6)<-vgenes_filter$Individual_id[which(vgenes_filter$time==6)]
+rownames(vusage_sign_24)<-vgenes_filter$Individual_id[which(vgenes_filter$time==24)]
+
+
+
+fill=c("chartreuse4", "dodgerblue3","darkorange2")
+fill2=brewer.pal(3,"Set2")
+#fill3 = brewer.pal(3,"Set1")
+#fill4 = b=brewer.pal(3,"Set3")
+
+ann_colors = list (clin = c("NP" = fill[1],"PNR"= fill[2],"PR" = fill[3]),
+                   ESRD = c("Other/Uk" = fill2[1], "Reflux" = fill2[2], "Non-Immune/Strutural" = fill2[3]))
+#immunosuppression = c("Steroid-free" = fill3[1], "Steroid-based" = fill3[2]),
+#source = c("Cadaver" = fill4[1],"Living/related"=fill4[2]))
+
+colfunc<-colorRampPalette(c("white","red4"))
+tiff("heatmap_vgene_0.tiff",res=300,w=1500,h=1200)
+pheatmap(t(vusage_sign_0),annotation_col = annotation_col_0,fontsize = 8,main="time 0"
+         ,annotation_colors = ann_colors,rownames = F,color =  colfunc(100),border_color=F)
+dev.off()
+tiff("heatmap_vgene_6.tiff",res=300,w=1500,h=1200)
+pheatmap(t(vusage_sign_6),annotation_col = annotation_col_6,fontsize = 8,main="time 6",
+         annotation_colors = ann_colors,rownames = F,color =  colfunc(100),border_color=F)
+dev.off()
+tiff("heatmap_vgene_24.tiff",res=300,w=1500,h=1200)
+pheatmap(t(vusage_sign_24),annotation_col = annotation_col_24, fontsize = 8, main="time 24",
+         annotation_colors = ann_colors,rownames = F,color =  colfunc(100),border_color=F)
+dev.off()
+
+tiff("boxplot_IGHV3-23.tiff",res=300,w=1500,h=1000)
+par(mfrow=c(1,3))
+boxplot(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$clin,
+        col=c("chartreuse4","darkorange2"),ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 0")
+boxplot(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$clin,
+        col=c("chartreuse4","darkorange2"),ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 6")
+boxplot(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$clin,
+        col=c("chartreuse4","darkorange2"),ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 24")
+dev.off()
+
+tiff("boxplot_IGHV3-23_ESRD.tiff",res=300,w=1500,h=1000)
+par(mfrow=c(1,3))
+boxplot(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$ESRD,
+        ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 0")
+boxplot(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$ESRD,
+        ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 6")
+boxplot(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$ESRD,
+        ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 24")
+dev.off()
+
+summary(glm(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$clin + annotation_col_0$ESRD))
+summary(glm(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$clin + annotation_col_6$ESRD))
+summary(glm(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$clin + annotation_col_24$ESRD))
+
+summary(glm(vusage_sign_0[,"IGHV3-23"]~factor(annotation_col_0$ESRD)))
+summary(glm(vusage_sign_6[,"IGHV3-23"]~factor(annotation_col_6$ESRD)))
+summary(glm(vusage_sign_24[,"IGHV3-23"]~factor(annotation_col_24$ESRD)))
+
+
+
 
 ###Longitudinal analysis
 p<-NULL
