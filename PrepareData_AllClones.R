@@ -225,3 +225,8 @@ id_naive_memory<-match(reads_clones_annot$specimen_id,rownames(read_naive_memory
 reads_clones_annot$IGH_memory<-read_naive_memory[id_naive_memory,1]
 reads_clones_annot$IGH_naive<-read_naive_memory[id_naive_memory,2]
 save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+
+####Adding the ESRD to the data
+reads_clones_annot<-read.csv("/Users/Pinedasans/VDJ/Data/total_reads_clones.csv")
+save(data_merge,reads_clones_annot,file="/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
+
