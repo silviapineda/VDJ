@@ -46,10 +46,15 @@ vgenes<-as.data.frame(unclass(table(data_gDNA_long_qc$specimen_label,data_gDNA_l
 id.spec<-match(rownames(vgenes),reads_clones_annot_Long_qc$specimen_id)
 vgenes<-cbind(vgenes,reads_clones_annot_Long_qc$clin[id.spec],reads_clones_annot_Long_qc$time[id.spec],
               reads_clones_annot_Long_qc$Sample_id[id.spec],reads_clones_annot_Long_qc$Individual.id[id.spec],
-              reads_clones_annot_Long_qc$ESRD[id.spec],reads_clones_annot_Long_qc$immunosuppression[id.spec],reads_clones_annot_Long_qc$Donor.Source[id.spec])
-colnames(vgenes)[65:71]<-c("clin","time","Sample_id","Individual_id","ESRD","immunosuppression","Source")
+              reads_clones_annot_Long_qc$ESRD[id.spec],reads_clones_annot_Long_qc$immunosuppression[id.spec],
+              reads_clones_annot_Long_qc$Donor.Source[id.spec],reads_clones_annot_Long_qc$Recipient.Gender[id.spec],
+              reads_clones_annot_Long_qc$Donor.Gender[id.spec],reads_clones_annot_Long_qc$Recipient.Age.when.had.Tx[id.spec],
+              reads_clones_annot_Long_qc$Donor.Age[id.spec],reads_clones_annot_Long_qc$recipient.Race[id.spec],
+              reads_clones_annot_Long_qc$hla_mismatch[id.spec])
+colnames(vgenes)[65:77]<-c("clin","time","Sample_id","Individual_id","ESRD","immunosuppression","Source","RecGender","DonGen","RecAge",
+                           "DonAge","RecRace","HLA")
 
-vusage<-matrix(NA,nrow(vgenes),(ncol(vgenes)-7))
+vusage<-matrix(NA,nrow(vgenes),(ncol(vgenes)-13))
 for (i in 1:64){
   vusage[,i]<-vgenes[,i]/reads_clones_annot_Long_qc$clones_gDNA[id.spec]
 }
@@ -139,19 +144,19 @@ vusage_sign_24<-vusage_sign_24[which(vgenes_filter$time==24 & vgenes_filter$clin
 
 annotation_col_0 = data.frame(
   clin = factor(vgenes_filter$clin[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
-  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
-  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
-  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
+  immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
+  source = factor(vgenes_filter$Source[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]))
 annotation_col_6 = data.frame(
   clin = factor(vgenes_filter$clin[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
-  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
-  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
-  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
+  immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]),
+  source = factor(vgenes_filter$Source[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]))
 annotation_col_24 = data.frame(
   clin = factor(vgenes_filter$clin[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
-  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
-  #immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
-  #source = factor(vgenes_filter$Source[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
+  ESRD = factor(vgenes_filter$ESRD[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
+  immunosuppression = factor(vgenes_filter$immunosuppression[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]),
+  source = factor(vgenes_filter$Source[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]))
 
 
 rownames(annotation_col_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]
@@ -293,15 +298,23 @@ boxplot(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$ESRD,
         ylim=c(0.0,0.5),ylab="IHGV3-23 expression",main="time 24")
 dev.off()
 
-summary(glm(vusage_sign_0[,"IGHV3-23"]~annotation_col_0$clin + annotation_col_0$ESRD))
-summary(glm(vusage_sign_6[,"IGHV3-23"]~annotation_col_6$clin + annotation_col_6$ESRD))
-summary(glm(vusage_sign_24[,"IGHV3-23"]~annotation_col_24$clin + annotation_col_24$ESRD))
 
-summary(glm(vusage_sign_0[,"IGHV3-23"]~factor(annotation_col_0$ESRD)))
-summary(glm(vusage_sign_6[,"IGHV3-23"]~factor(annotation_col_6$ESRD)))
-summary(glm(vusage_sign_24[,"IGHV3-23"]~factor(annotation_col_24$ESRD)))
+summary(glm(vusage_filter[which(vgenes_filter$time==0),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==0)]))
+summary(glm(vusage_filter[which(vgenes_filter$time==6),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==6)]))
+summary(glm(vusage_filter[which(vgenes_filter$time==24),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==24)]))
 
+summary(glm(vusage_filter[which(vgenes_filter$time==0),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==0)]
+            +vgenes_filter$HLA[which(vgenes_filter$time==0)]))
 
+summary(glm(vusage_filter[which(vgenes_filter$time==6),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==6)]
+            +vgenes_filter$HLA[which(vgenes_filter$time==6)]))
+
+summary(glm(vusage_filter[which(vgenes_filter$time==24),"IGHV3-23"]~vgenes_filter$clin[which(vgenes_filter$time==24)]
+              +vgenes_filter$HLA[which(vgenes_filter$time==24)]))
+
+summary(glm(vusage_filter[which(vgenes_filter$time==0),"IGHV3-23"]~vgenes_filter$ESRD[which(vgenes_filter$time==0)]))
+summary(glm(vusage_filter[which(vgenes_filter$time==6),"IGHV3-23"]~vgenes_filter$ESRD[which(vgenes_filter$time==6)]))
+summary(glm(vusage_filter[which(vgenes_filter$time==24),"IGHV3-23"]~vgenes_filter$ESRD[which(vgenes_filter$time==24)]))
 
 
 ###Longitudinal analysis
