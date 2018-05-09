@@ -35,7 +35,7 @@ id<-match(reads_clones_annot_gDNA$specimen_id,diversity[,1])
 diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,-1])
 
 ##Filter by those that has less than 1000 reads
-diversity_gDNA<-diversity_reads_clones[which(diversity_reads_clones$reads_gDNA>1000),] #70 samples
+diversity_gDNA<-diversity_reads_clones[which(diversity_reads_clones$reads_gDNA>1000),] 
 min(diversity_gDNA$reads_gDNA) #1062
 ##Down-sampling to 1062 reads
 id<-unlist(lapply(diversity_gDNA$specimen_id, function(x) grep(x,data_gDNA_long$specimen_label)))
