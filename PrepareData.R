@@ -35,6 +35,10 @@ save(data, file="new_merged_data.RData")
 ###This is the data received from Krishna
 load("/Users/Pinedasans/VDJ/Data/new_merged_data.RData")
 
+##plot histogram for the V score
+hist(data$v_score,xlab = "V gene score", main="Histogram: Scott Data")
+abline(v=140,col="red")
+
 ##Read the clinical annotations
 clin_annot <- read.csv("/Users/Pinedasans/VDJ/Data/clin_annot_allsamples.csv")
 rownames(clin_annot) <- clin_annot[,5]
@@ -46,6 +50,8 @@ unique(data[,c("specimen_label","amplification_label", "sample_label","specimen_
 ##############################
 ###Some Quality Control
 #############################
+##Discard the non-functional sequences
+data_qc<-data[which(data$productive=="t"),]
 
 ##Discard all the V_score < 140
 data_qc<-data[which(data$v_score>=140),]
