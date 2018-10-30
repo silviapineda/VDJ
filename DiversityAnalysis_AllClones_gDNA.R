@@ -36,7 +36,7 @@ load("/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
 ## Calculate demographics
 ########
 
-reads_clones_annot_reads100<-reads_clones_annot[which(reads_clones_annot$reads_gDNA>10),]
+reads_clones_annot_reads100<-reads_clones_annot[which(reads_clones_annot$reads_gDNA>100),]
 reads_clones_annot_reads100_long<-reads_clones_annot_reads100[which(reads_clones_annot_reads100$clin!="pre-AR" & reads_clones_annot_reads100$clin!="AR"),]
 reads_clones_annot_reads100_AR<-reads_clones_annot_reads100[which(reads_clones_annot_reads100$clin=="pre-AR" | reads_clones_annot_reads100$clin=="AR"),]
 
@@ -48,6 +48,10 @@ reads_clones_annot_subjects<-rbind(reads_clones_annot_reads100_long[!duplicated(
 
 dim(reads_clones_annot_subjects)
 table(reads_clones_annot_subjects$clin)
+
+##barplot with ages
+xx<-barplot(reads_clones_annot_subjects$Recipient.Age.when.had.Tx,col = COLOR[factor(reads_clones_annot_subjects$clin)],ylab = "Age Recipient")
+text(x=xx,y = reads_clones_annot_subjects$Recipient.Age.when.had., label = reads_clones_annot_subjects$Recipient.Age.when.had., pos = 3, cex = 0.8, col = "red")
 
 ##CADI score
 summary(reads_clones_annot_subjects$cadi)
@@ -137,6 +141,13 @@ anova(fit)
 table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_gDNA!=0)],reads_clones_annot_reads100$time[which(reads_clones_annot_reads100$reads_gDNA!=0)])
 table(reads_clones_annot_reads100$clin[which(reads_clones_annot_reads100$reads_cDNA!=0)],reads_clones_annot_reads100$time[which(reads_clones_annot_reads100$reads_cDNA!=0)])
 
+##barplot with ages
+reads_clones_annot_reads100_time0<-reads_clones_annot_reads100_long[which(reads_clones_annot_reads100_long$time==0),]
+xx<-barplot(reads_clones_annot_reads100_time0$Recipient.Age.when.had.Tx,col = COLOR[factor(reads_clones_annot_reads100_time0$clin)],ylab = "Age Recipient",ylim = c(0,20))
+text(x=xx,y = reads_clones_annot_reads100_time0$Recipient.Age.when.had., label = reads_clones_annot_reads100_time0$Recipient.Age.when.had., pos = 3, cex = 0.8, col = "red")
+reads_clones_annot_reads100_time6<-reads_clones_annot_reads100_long[which(reads_clones_annot_reads100_long$time==6),]
+xx<-barplot(reads_clones_annot_reads100_time6$Recipient.Age.when.had.Tx,col = COLOR[factor(reads_clones_annot_reads100_time6$clin)],ylab = "Age Recipient",ylim = c(0,20))
+text(x=xx,y = reads_clones_annot_reads100_time6$Recipient.Age.when.had., label = reads_clones_annot_reads100_time6$Recipient.Age.when.had., pos = 3, cex = 0.8, col = "red")
 
 ########################################
 ####Calculate repertoire diversity ####
@@ -202,6 +213,7 @@ diversity_gDNA<-diversity_reads_clones[which(diversity_reads_clones$clones_gDNA>
 diversity_long_gDNA<-diversity_gDNA[which(diversity_gDNA$clin=="NP" | diversity_gDNA$clin=="PNR" | diversity_gDNA$clin=="PR"),]
 diversity_long_gDNA$clin<-factor(diversity_long_gDNA$clin, levels=c("NP", "PNR", "PR"))
 table(diversity_long_gDNA$clin[which(is.na(diversity_long_gDNA$reads_gDNA)==F)],diversity_long_gDNA$time[which(is.na(diversity_long_gDNA$reads_gDNA)==F)])
+save(diversity_long_gDNA,file="Data/diversity_long_gDNA.Rdata")
 
 ggplot(data=diversity_long_gDNA, aes(x=time, y=clones_PCR_A, group=Sample_id, shape=clin, color=clin)) +
   geom_line() +
