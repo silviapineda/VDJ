@@ -36,7 +36,7 @@ load("Data/diversity_long_gDNA.Rdata")
 # Table 1 - Patient demographics by variable of interest ----
 annot_qc_unique<-diversity_long_gDNA[which(duplicated(diversity_long_gDNA$Sample_id)==F),]
 table(annot_qc_unique$clin)
-explanatory = c("Recipient.Age.when.had.Tx", "immunosuppression","Donor.Source", "Recipient.Gender")
+explanatory = c("Recipient.Age.when.had.Tx", "immunosuppression","Donor.Source", "Recipient.Gender","ESRD")
 dependent = 'clin'
 table<-annot_qc_unique %>%
   summary_factorlist(dependent, explanatory, p=TRUE, add_dependent_label=TRUE)
@@ -60,6 +60,7 @@ dev.off()
 ###########################################
 annot_qc_time0<-diversity_long_gDNA[which(diversity_long_gDNA$time==0),]
 annot_qc_time6<-diversity_long_gDNA[which(diversity_long_gDNA$time>=6),]
+
 #####Recipient Age
 tiff("Results/boxplot_clones_RecAge.tiff",h=2000,w=3000,res=300)
 p1 = ggplot(annot_qc_time0,aes(Recipient.Age.when.had.Tx,clones_gDNA,color=clin)) + 
@@ -107,6 +108,20 @@ tiff("Results/Table_Immuno_6.tiff",res=300,w=4000,h=500)
 grid.table(example_table)
 dev.off()
 
+#####ESRD
+annot_qc_time0$ESRD2<-ifelse(annot_qc_time0$Cause.of.ESRD=="Pyelonephritis/Interstitial Nephritis" |
+                               annot_qc_time0$Cause.of.ESRD=="Obstructive Uropathy", "obstructive uropathy/pyelo/neurogenic bladder","Other")
+tiff("Results/boxplot_clones_ESRD2.tiff",h=2000,w=3000,res=300)
+ggplot(annot_qc_time0,aes(factor(ESRD2),clones_gDNA,fill=ESRD2)) + 
+  geom_boxplot() + scale_fill_manual(values=COLOR)  + labs(title="time <=0",x="ESRD2", y = "Clones")
+dev.off()
+explanatory = c("clin","ESRD2")
+dependent = 'clones_gDNA'
+example_table<-annot_qc_time0 %>% 
+  finalfit(dependent, explanatory)
+tiff("Results/Table_ESRD_0.tiff",res=300,w=4000,h=500)
+grid.table(example_table)
+dev.off()
 
 #####DonorType
 tiff("Results/boxplot_clones_DonorType.tiff",h=2000,w=3000,res=300)

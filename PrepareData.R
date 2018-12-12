@@ -43,6 +43,7 @@ abline(v=140,col="red")
 clin_annot <- read.csv("/Users/Pinedasans/VDJ/Data/clin_annot_allsamples.csv")
 rownames(clin_annot) <- clin_annot[,5]
 
+
 ##Some sample statistics
 table(clin_annot$clin[!duplicated(clin_annot$Sample_id)])
 unique(data[,c("specimen_label","amplification_label", "sample_label","specimen_description","participant_label")])

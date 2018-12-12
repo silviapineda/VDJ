@@ -19,7 +19,7 @@ library(entropy)
 library(ggplot2)
 library(untb)
 library(lme4)
-library(sjPlot)
+#library(sjPlot)
 library("caroline")
 library("effects")
 library("RColorBrewer")
@@ -30,7 +30,6 @@ library("SciViews")
 
 setwd("/Users/Pinedasans/VDJ/ResultsAllClones/")
 load("/Users/Pinedasans/VDJ/Data/VDJ_clonesAllmerged.Rdata")
-
 
 #########
 ## Calculate demographics
@@ -203,6 +202,10 @@ reads_clones_annot_gDNA<-reads_clones_annot[which(reads_clones_annot$gDNA=="gDNA
 id<-match(reads_clones_annot_gDNA$specimen_id,diversity[,1])
 diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,-1])
 
+###DSA
+DSA<-read.csv("/Users/Pinedasans/VDJ/Data/DSA_data.csv")
+id<-match(diversity_reads_clones$specimen_id,DSA$specimen_id)
+diversity_reads_clones$DSA<-DSA$DSA[id]
 #############
 ### gDNA ####
 #############
@@ -308,13 +311,17 @@ dev.off()
 ###Sample 8 is an outlier at 6 and 24
 diversity_long_gDNA_sample8<-diversity_long_gDNA[which(diversity_long_gDNA$Individual.id!="Individual8"),]
 
+###Only for sensitivity analysis
+#diversity_long_gDNA_sample8<-diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$Recipient.Age.when.had.Tx<19 &
+#                                                                 diversity_long_gDNA_sample8$Recipient.Age.when.had.Tx>1),]
+
 data_summary <- function(x) {
        m <- mean(x)
        ymin <- m-sd(x)
        ymax <- m+sd(x)
        return(c(y=m,ymin=ymin,ymax=ymax))
    }
-tiff("boxplot_clones_gDNA.tiff",h=1800,w=3000,res=300)
+tiff("boxplot_clones_gDNA_sensitivity.tiff",h=1800,w=3000,res=300)
 p1 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2==0),], 
             aes(factor(diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]), 
                 diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)],fill=clin)) + ylim(0,4000) +
@@ -365,9 +372,11 @@ p3 = ggplot(diversity_long_gDNA_sample8[which(diversity_long_gDNA_sample8$time2=
 grid.arrange(p1, p2,p3,ncol=3)
 dev.off()
 
-summary(glm(diversity_long_gDNA_sample8$est_0.0D[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]))
-summary(glm(diversity_long_gDNA_sample8$est_0.0D[which(diversity_long_gDNA_sample8$time2==6)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]))
-summary(glm(diversity_long_gDNA_sample8$est_0.0D[which(diversity_long_gDNA_sample8$time2==24)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]))
+diversity_long_gDNA_sample8$clin<-ifelse(diversity_long_gDNA_sample8$clin=="PNR" |
+                                           diversity_long_gDNA_sample8$clin=="NP" ,"NR","PR")
+summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)]))
+summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==6)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==6)]))
+summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==24)] ~ diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==24)]))
 
 ###If deleted the outlier at time 24 is also signficant?
 diversity_long_gDNA_sample6_24<-diversity_long_gDNA[which(diversity_long_gDNA$subject_id!="sample6_24"),]
@@ -442,13 +451,30 @@ summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sa
 
 summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ 
               diversity_long_gDNA_sample8$clin[which(diversity_long_gDNA_sample8$time2==0)] +
-              diversity_long_gDNA_sample8$ESRD[which(diversity_long_gDNA_sample8$time2==0)]))
+              diversity_long_gDNA_sample8$DSA[which(diversity_long_gDNA_sample8$time2==0)]))
 
+summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ 
+              diversity_long_gDNA_sample8$ESRD[which(diversity_long_gDNA_sample8$time2==0)]))
+summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==6)] ~ 
+              diversity_long_gDNA_sample8$ESRD[which(diversity_long_gDNA_sample8$time2==6)]))
 summary(glm(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==24)] ~ 
               diversity_long_gDNA_sample8$ESRD[which(diversity_long_gDNA_sample8$time2==24)]))
 
-boxplot(diversity_long_gDNA_sample8$clones_gDNA ~ 
-          factor(diversity_long_gDNA_sample8$ESRD))
+tiff("Boxplot_ESRD_time0",h=1800,w=4000,res=300)
+boxplot(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==0)] ~ 
+          +           factor(diversity_long_gDNA_sample8$Cause.of.ESRD[which(diversity_long_gDNA_sample8$time2==0)]),
+        las=0,cex.axis=0.4, ylab="Number of Clones")
+dev.off()
+tiff("Boxplot_ESRD_time6",h=1800,w=4000,res=300)
+boxplot(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==6)] ~ 
+          +           factor(diversity_long_gDNA_sample8$Cause.of.ESRD[which(diversity_long_gDNA_sample8$time2==6)]),
+        las=0,cex.axis=0.4, ylab="Number of Clones")
+dev.off()
+tiff("Boxplot_ESRD_time24",h=1800,w=4000,res=300)
+boxplot(diversity_long_gDNA_sample8$clones_gDNA[which(diversity_long_gDNA_sample8$time2==24)] ~ 
+          +           factor(diversity_long_gDNA_sample8$Cause.of.ESRD[which(diversity_long_gDNA_sample8$time2==24)]),
+        las=0,cex.axis=0.4, ylab="Number of Clones")
+dev.off()
 
 
 tiff("boxplot_SHM_gDNA.tiff",h=1800,w=3000,res=300)
@@ -560,8 +586,8 @@ dev.off()
 
 ##If we delete the 32 time point
 diversity_long_gDNA_32time<-diversity_long_gDNA[which(diversity_long_gDNA$time!=32),]
-fm_null <- lmer(diversity_long_gDNA_32time$SHM_gDNA ~ clin + time + (time | Sample_id),data=diversity_long_gDNA_32time,REML = F)
-fm_full <- lmer(diversity_long_gDNA_32time$SHM_gDNA ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA_32time,REML = F)
+fm_null <- lmer(diversity_long_gDNA_32time$entropy ~ clin + time + (time | Sample_id),data=diversity_long_gDNA_32time,REML = F)
+fm_full <- lmer(diversity_long_gDNA_32time$entropy ~  clin*time + (time | Sample_id) ,data=diversity_long_gDNA_32time,REML = F)
 anova(fm_full, fm_null)
 
 tiff("plot_lmer_SHM_gDNA_no32.tiff",h=1700,w=2000,res=300)

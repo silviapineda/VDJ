@@ -561,6 +561,11 @@ write.csv(result,file="ResultsBoxplots_cDNA.csv")
 ########################################
 ###  Fitting a longitudinal model  ####
 #######################################
+##For the sensitivity analysis
+diversity_long_cDNA2<-diversity_long_cDNA
+diversity_long_cDNA<-diversity_long_cDNA2[which(diversity_long_cDNA2$time<30),c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory",
+                                            "clones_IGHA","clones_IGHD","clones_IGHG",
+                                            "clones_IGHM","clones_naive","clones_memory","IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D","time","clin","Sample_id")]
 
 ##Clones
 clones<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive","clones_memory",
@@ -577,7 +582,7 @@ for (i in clones){
   p_value_clones[j]<-anova(fm_full, fm_null)[2,8] 
   j=j+1
   
-  tiff(paste0("plot_lmer_clones_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
+  #tiff(paste0("plot_lmer_clones_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
   p <- ggplot(fm_full, aes(x = time, y = get(paste0("diversity_long_cDNA_",i))[match(i,colnames(get(paste0("diversity_long_cDNA_",i))))][,1], colour = clin)) +
   scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
   geom_point(size=2) +
@@ -586,7 +591,7 @@ for (i in clones){
   
   
   print(p)
-  dev.off()
+  #dev.off()
 }
 names(p_value_clones)<-clones
 
@@ -595,8 +600,8 @@ clones<-c("clones_IGHA","clones_IGHD","clones_IGHG","clones_IGHM","clones_naive"
           "IGHA_est_0.0D","IGHD_est_0.0D","IGHG_est_0.0D","IGHM_est_0.0D")
 j<-1
 p_value_entropy<-NULL
-for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory",
-            "IGHA_entropy_recon","IGHD_entropy_recon","IGHG_entropy_recon","IGHM_entropy_recon")){
+for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory")){#,
+            #"IGHA_entropy_recon","IGHD_entropy_recon","IGHG_entropy_recon","IGHM_entropy_recon")){
   assign(paste0("diversity_long_cDNA_",i),diversity_long_cDNA[which(diversity_long_cDNA[match(clones[j],colnames(diversity_long_cDNA))]>100),])
   fm_null <- lmer(get(paste0("diversity_long_cDNA_",i))[match(i,colnames(get(paste0("diversity_long_cDNA_",i))))][,1] ~ 
                     clin + time + (1 | Sample_id),data=get(paste0("diversity_long_cDNA_",i)),REML = F)
@@ -606,7 +611,7 @@ for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy
   p_value_entropy[j]<-anova(fm_full, fm_null)[2,8] 
   j=j+1
   
-  tiff(paste0("plot_lmer_entropy_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
+  #tiff(paste0("plot_lmer_entropy_cDNA_",i,".tiff"),h=1200,w=1400,res=300)
   p <- ggplot(fm_full, aes(x = time, y = get(paste0("diversity_long_cDNA_",i))[match(i,colnames(get(paste0("diversity_long_cDNA_",i))))][,1], colour = clin)) +
     scale_colour_manual(values=c("chartreuse4", "dodgerblue3","darkorange2")) +
     geom_point(size=1.2) +
@@ -614,7 +619,7 @@ for (i in c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy
     labs(x = "Time (months)",y = "Shannon entropy") + theme_bw() + theme_light()
   
   print(p)
-  dev.off()
+  #dev.off()
 }
 names(p_value_entropy)<-c("entropy_IGHA","entropy_IGHD","entropy_IGHG","entropy_IGHM","entropy_naive","entropy_memory",
                           "IGHA_entropy_recon","IGHD_entropy_recon","IGHG_entropy_recon","IGHM_entropy_recon")
