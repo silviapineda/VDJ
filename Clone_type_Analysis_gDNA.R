@@ -38,6 +38,18 @@ clone_type_gDNA_df_no8<-clone_type_gDNA_df[which(clone_type_gDNA_df$individual_i
 id_sample<-match(rownames(clone_type_gDNA_df_no8),rownames(clone_type_gDNA_num_reduced))
 clone_type_gDNA_num_reduced_no8<-clone_type_gDNA_num_reduced[id_sample,]
 
+
+###PCA Analysis
+pca<-prcomp(clone_type_gDNA_num_reduced_no8[which(clone_type_gDNA_df_no8$time==24),])
+plot(pca, type = "l")
+
+SPP <- clone_type_gDNA_df_no8$clin[which(clone_type_gDNA_df_no8$time==24)]
+COLOR <- c("chartreuse4", "dodgerblue3","darkorange2")
+
+pc <- c(1,2)
+plot(pca$x[,pc[1]], pca$x[,pc[2]], col=COLOR[SPP],pch=20,xlab="PCA1",ylab="PCA2")
+legend(-110,-100, legend=levels(levels.SPP), col=COLOR,pch=20,cex=0.8)
+
 #############
 ### Analysis 1: present/no-present
 ############
@@ -46,6 +58,7 @@ clone_type_gDNA_df_no8$time<-replace(clone_type_gDNA_df_no8$time,clone_type_gDNA
 matrix_clones_presence_time0<-matrix_clones_presence[,which(clone_type_gDNA_df_no8$time==0)]
 matrix_clones_presence_time6<-matrix_clones_presence[,which(clone_type_gDNA_df_no8$time==6)]
 matrix_clones_presence_time24<-matrix_clones_presence[,which(clone_type_gDNA_df_no8$time==24)]
+
 
 p_value_0=NULL
 p_value_6=NULL
@@ -65,6 +78,11 @@ for(i in 1:dim(matrix_clones_presence_time0)[1]){
     p_value_24[i]=fisher.test(tab)$p.value
   }
 }
+
+splitpop<-strsplit(rownames(matrix_clones_presence_time24),"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+counts = (matrix(data = c(16, 66, 10348, 107875), nrow = 2)) #p-value = 0.5
+chisq.test(counts)
 
 ##time0
 matrix_clones_presence_significant_time0<-matrix_clones_presence_time0[which(p_value_0<0.05),] #8
@@ -156,6 +174,21 @@ names(results_time24)<-rownames(matrix_clones_presence_significant_time24)
 cat(capture.output(print(results_time24), file="clones_fisher_time24.txt"))
 write.csv(names(results_time24),file="clones_results_time24.csv")
 
+###Are IGHV3-23 over-repressented among the shared clones??
+id<-match(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,names(results_time24))
+table(is.na(id)==F) ##268 sequences belong to a persistnece clone
+data_gDNA_long_qc[which(is.na(id)==F),"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[which(is.na(id)==F),"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#49 sequence are IGHV3-23
+
+##Total
+data_gDNA_long_qc[,"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[,"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#28750 sequence are IGHV3-23
+counts = (matrix(data = c(49, 268, 297829, 326578), nrow = 2)) #p-value < 2.2*10-16
+chisq.test(counts)
 
 ###############
 ## Find if there is something longitudinally
@@ -192,6 +225,22 @@ for (i in 1:length(sample_filter)){
 }
 names(persistance)<-sample_filter
 
+###Are IGHV3-23 over-repressented among the persistence clones??
+id<-match(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,unlist(persistance))
+table(is.na(id)==F) ##3205 sequences belong to a persistnece clone
+data_gDNA_long_qc[which(is.na(id)==F),"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[which(is.na(id)==F),"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#397 sequence are IGHV3-23
+
+##Total
+data_gDNA_long_qc[,"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[,"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#28750 sequence are IGHV3-23
+counts = (matrix(data = c(397, 2808, 297829, 326578), nrow = 2)) #p-value < 2.2*10-16
+chisq.test(counts)
+
 
 ###Number of clones that persist 
 persistance_number<-NULL
@@ -220,7 +269,7 @@ colnames(clone_df)<-c("clone","specimen","count")
 colnames(reads_clones_annot)[4]<-c("specimen")
 clone_merge<-merge(clone_df,reads_clones_annot[,c(1,3,4,6)],by = "specimen")
 
-clone_df_noceros = clone_merge[which(clone_merge$count!=0),] #120,934
+clone_df_noceros = clone_merge[which(clone_merge$count!=0),] #120,574
 
 unique_clones<-unique(unlist(persistance))
 id<-NULL
@@ -280,9 +329,56 @@ for(i in 1:length(clones)){
   clones_list_shared[[i]]<-persistance_df[grep(clones[i],persistance_df$V_J_lenghCDR3_CloneId),]
 }
 
+
+###Are IGHV3-23 over-repressented among the shared persistence clones??
+id<-match(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,clones)
+table(is.na(id)==F) ##1051 sequences belong to a persistnece clone
+data_gDNA_long_qc[which(is.na(id)==F),"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[which(is.na(id)==F),"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#140 sequence are IGHV3-23
+
+##Total
+data_gDNA_long_qc[,"v_gene"]
+splitpop<-strsplit(data_gDNA_long_qc[,"v_gene"],"_")
+xx<-unlist(lapply(splitpop, `[[`, 1))
+table(xx)#28750 sequence are IGHV3-23
+counts = (matrix(data = c(140, 1051, 297829, 326578), nrow = 2)) #p-value < 2.2*10-16
+chisq.test(counts)
+
+###Shared sequences before and after transplantation
+id<-match(data_gDNA_long_qc$V_J_lenghCDR3_CloneId,clones)
+table(is.na(id)==F) ##1051 sequences belong to a persistnece clone
+shared<-data_gDNA_long_qc[which(is.na(id)==F),c("V_J_lenghCDR3_CloneId","time","clin")]
+#NP
+shared_NP<-shared[which(shared$clin=="NP"),]
+pre<-table(shared_NP[which(shared_NP$time==0),"V_J_lenghCDR3_CloneId"])
+post<-table(shared_NP[which(shared_NP$time>0),"V_J_lenghCDR3_CloneId"])
+freqpre<-pre/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="NP" & data_gDNA_long_qc$time==0),])[1]
+sum(freqpre)
+freqpost<-post/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="NP" & data_gDNA_long_qc$time>0),])[1]
+sum(freqpost)
+#PNR
+shared_PNR<-shared[which(shared$clin=="PNR"),]
+pre<-table(shared_PNR[which(shared_PNR$time==0),"V_J_lenghCDR3_CloneId"])
+post<-table(shared_PNR[which(shared_PNR$time>0),"V_J_lenghCDR3_CloneId"])
+freqpre<-pre/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="PNR" & data_gDNA_long_qc$time==0),])[1]
+sum(freqpre)
+freqpost<-post/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="PNR" & data_gDNA_long_qc$time>0),])[1]
+sum(freqpost)
+#PR
+shared_PR<-shared[which(shared$clin=="PR"),]
+pre<-table(shared_PR[which(shared_PR$time==0),"V_J_lenghCDR3_CloneId"])
+post<-table(shared_PR[which(shared_PR$time>0),"V_J_lenghCDR3_CloneId"])
+freqpre<-pre/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="PR" & data_gDNA_long_qc$time==0),])[1]
+sum(freqpre)
+freqpost<-post/dim(data_gDNA_long_qc[which(data_gDNA_long_qc$clin=="PR" & data_gDNA_long_qc$time>0),])[1]
+sum(freqpost)
+
 clones_list_shared_df<-do.call(rbind.data.frame, clones_list_shared)
 clones_list_shared_df_cdr3aa<-merge(clones_list_shared_df,data_gDNA_long_qc[,c("individual_id","V_J_lenghCDR3_CloneId","clin","cdr3_seq_aa_q")],by=c("individual_id","V_J_lenghCDR3_CloneId","clin"))
 clones_list_shared_df_cdr3aa_unique<-unique(clones_list_shared_df_cdr3aa)
 clones_list_shared_df_cdr3aa_order<-clones_list_shared_df_cdr3aa_unique[order(clones_list_shared_df_cdr3aa_unique$V_J_lenghCDR3_CloneId),]
+
 write.csv(clones_list_shared_df_cdr3aa_order,"clones_persistence_table3.csv")
 
