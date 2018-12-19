@@ -199,6 +199,7 @@ diversity<-read.csv("/Users/Pinedasans/VDJ/Data/diversity_AllClones_gDNA.csv",he
 diversity$entropy_recon=ln(diversity$est_1.0D)
 
 reads_clones_annot_gDNA<-reads_clones_annot[which(reads_clones_annot$gDNA=="gDNA"),]
+
 id<-match(reads_clones_annot_gDNA$specimen_id,diversity[,1])
 diversity_reads_clones<-cbind(reads_clones_annot_gDNA,diversity[id,-1])
 
