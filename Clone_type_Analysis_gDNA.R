@@ -187,7 +187,7 @@ data_gDNA_long_qc[,"v_gene"]
 splitpop<-strsplit(data_gDNA_long_qc[,"v_gene"],"_")
 xx<-unlist(lapply(splitpop, `[[`, 1))
 table(xx)#28750 sequence are IGHV3-23
-counts = (matrix(data = c(49, 268, 297829, 326578), nrow = 2)) #p-value < 2.2*10-16
+counts = (matrix(data = c(49, 268, 297829, 326578), nrow = 2)) #p-value = 2.8*10-30
 chisq.test(counts)
 
 ###############
