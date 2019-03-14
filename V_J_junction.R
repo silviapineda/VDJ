@@ -142,6 +142,7 @@ vusage_sign_0<-vusage_sign_0[which(vgenes_filter$time==0 & vgenes_filter$clin!="
 vusage_sign_6<-vusage_sign_6[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR"),]
 vusage_sign_24<-vusage_sign_24[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR"),]
 
+
 annotation_col_0 = data.frame(
   clin = factor(vgenes_filter$clin[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
   causeESRD = factor(vgenes_filter$causeESRD[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]),
@@ -163,12 +164,18 @@ annotation_col_24 = data.frame(
 
 
 rownames(annotation_col_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]
+write.csv(annotation_col_0,"~/VDJ/Article/Final submission/SourceData/annotation_col_0.csv")
 rownames(annotation_col_6)<-vgenes_filter$Individual_id[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]
+write.csv(annotation_col_6,"~/VDJ/Article/Final submission/SourceData/annotation_col_6.csv")
 rownames(annotation_col_24)<-vgenes_filter$Individual_id[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]
+write.csv(annotation_col_24,"~/VDJ/Article/Final submission/SourceData/annotation_col_24.csv")
 
 rownames(vusage_sign_0)<-vgenes_filter$Individual_id[which(vgenes_filter$time==0 & vgenes_filter$clin!="PNR")]
+write.csv(vusage_sign_0,"~/VDJ/Article/Final submission/SourceData/vusage_gene_0.csv")
 rownames(vusage_sign_6)<-vgenes_filter$Individual_id[which(vgenes_filter$time==6 & vgenes_filter$clin!="PNR")]
+write.csv(vusage_sign_6,"~/VDJ/Article/Final submission/SourceData/vusage_sign_6.csv")
 rownames(vusage_sign_24)<-vgenes_filter$Individual_id[which(vgenes_filter$time==24 & vgenes_filter$clin!="PNR")]
+write.csv(vusage_sign_24,"~/VDJ/Article/Final submission/SourceData/vusage_gene_24.csv")
 
 
 
